@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Trang quản trị";
+    Layout = "_AdminLayout";
+}
+
+<h3 class="mb-4">Trang quản trị</h3>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Quản lý danh mục</h5>
+                <p class="card-text">Thêm, sửa, xóa danh mục sản phẩm</p>
+                <a href="/admin/categories" class="btn btn-primary">Vào quản lý</a>
+            </div>
+        </div>
+    </div>
+
+    @* Các phần dưới chưa làm xong, khi làm xong thì đổi nút disabled thành link thật *@
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Quản lý sản phẩm</h5>
+                <p class="card-text">Thêm, sửa, xóa sản phẩm</p>
+                <button class="btn btn-secondary" disabled>Sắp có</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Quản lý tài khoản</h5>
+                <p class="card-text">Tạo tài khoản, khóa / mở khóa</p>
+                <button class="btn btn-secondary" disabled>Sắp có</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Quản lý hóa đơn</h5>
+                <p class="card-text">Xem hóa đơn, đổi trạng thái</p>
+                <button class="btn btn-secondary" disabled>Sắp có</button>
+            </div>
+        </div>
+    </div>
+</div>

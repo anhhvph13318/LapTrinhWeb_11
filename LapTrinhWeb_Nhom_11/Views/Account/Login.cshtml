@@ -1,0 +1,63 @@
+﻿@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="bg-light">
+    <div class="container" style="max-width: 400px; margin-top: 100px;">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="text-center mb-4">Đăng nhập</h3>
+                <div class="mb-3">
+                    <label class="form-label">Tên đăng nhập</label>
+                    <input type="text" id="username" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" id="password" class="form-control" />
+                </div>
+                <div id="error" class="text-danger mb-3"></div>
+                <button type="button" id="btnLogin" class="btn btn-primary w-100">Đăng nhập</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            if (username == "" || password == "") {
+                document.getElementById("error").innerText = "Vui lòng nhập đủ tên đăng nhập và mật khẩu";
+                return;
+            }
+            var res = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: username, password: password })
+            });
+            if (res.ok) {
+                var data = await res.json();
+                window.location.href = data.redirect;
+            } else {
+                document.getElementById("error").innerText = await res.text();
+            }
+        }
+
+        document.getElementById("btnLogin").addEventListener("click", login);
+        // bấm Enter cũng đăng nhập
+        document.getElementById("password").addEventListener("keydown", function (e) {
+            if (e.key == "Enter") {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>

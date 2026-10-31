@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quản trị</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body>
+    <div class="d-flex" style="min-height: 100vh;">
+        <!-- menu bên trái -->
+        <div class="bg-dark text-white p-3" style="width: 220px;">
+            <h5 class="mb-4">Trang quản trị</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/admin">Trang chủ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/categories">Quản lý danh mục</a>
+                </li>
+                @* Khi làm thêm các phần khác thì thêm menu ở đây:
+                   /admin/products, /admin/accounts, /admin/orders *@
+            </ul>
+        </div>
+
+        <!-- nội dung -->
+        <div class="flex-grow-1">
+            <div class="border-bottom p-3 d-flex justify-content-between">
+                <span>Xin chào, <b>@Context.Session.GetString("FullName")</b></span>
+                <a href="/logout">Đăng xuất</a>
+            </div>
+            <div class="p-4">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

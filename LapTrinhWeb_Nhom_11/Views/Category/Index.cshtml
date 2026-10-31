@@ -1,0 +1,195 @@
+@{
+    ViewData["Title"] = "Quản lý danh mục";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h3>Quản lý danh mục</h3>
+    <button type="button" class="btn btn-primary" onclick="openAdd()">Thêm danh mục</button>
+</div>
+
+<div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="showDeleted" onchange="render()" />
+    <label class="form-check-label" for="showDeleted">Hiện cả danh mục đã xóa</label>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>STT</th>
+            <th>Tên danh mục</th>
+            <th>Mô tả</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+</table>
+
+<!-- form thêm / sửa -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Thêm danh mục</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tên danh mục</label>
+                    <input type="text" id="name" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mô tả</label>
+                    <textarea id="description" class="form-control" rows="3"></textarea>
+                </div>
+                <div id="error" class="text-danger"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="save()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var categories = [];
+        var editingId = 0;
+        var modal = new bootstrap.Modal(document.getElementById("categoryModal"));
+
+        // chống lỗi hiển thị khi tên có ký tự đặc biệt
+        function esc(text) {
+            var div = document.createElement("div");
+            div.textContent = text ?? "";
+            return div.innerHTML;
+        }
+
+        // nếu hết phiên đăng nhập thì về trang login
+        function checkLogin(res) {
+            if (res.status == 401) {
+                window.location.href = "/login";
+                return false;
+            }
+            return true;
+        }
+
+        async function loadData() {
+            var res = await fetch("/Categories/GetAll");
+            categories = await res.json();
+            render();
+        }
+
+        function render() {
+            var showDeleted = document.getElementById("showDeleted").checked;
+            var html = "";
+            categories.forEach(function (c,index) {
+                if (c.isDeleted && !showDeleted) {
+                    return;
+                }
+                html += "<tr" + (c.isDeleted ? " class='text-muted'" : "") + ">";
+                html += "<td>" + (index + 1) + "</td>";
+                html += "<td>" + esc(c.name) + "</td>";
+                html += "<td>" + esc(c.description) + "</td>";
+                html += "<td>" + (c.isDeleted ? "<span class='badge bg-secondary'>Đã xóa</span>" : "<span class='badge bg-success'>Đang dùng</span>") + "</td>";
+                html += "<td>";
+                html += "<button class='btn btn-sm btn-warning me-1' onclick='openEdit(" + c.id + ")'>Sửa</button>";
+                if (c.isDeleted) {
+                    html += "<button class='btn btn-sm btn-success' onclick='restore(" + c.id + ")'>Khôi phục</button>";
+                } else {
+                    html += "<button class='btn btn-sm btn-danger' onclick='remove(" + c.id + ")'>Xóa</button>";
+                }
+                html += "</td></tr>";
+            });
+            document.getElementById("tbody").innerHTML = html;
+        }
+
+        function openAdd() {
+            editingId = 0;
+            document.getElementById("modalTitle").innerText = "Thêm danh mục";
+            document.getElementById("name").value = "";
+            document.getElementById("description").value = "";
+            document.getElementById("error").innerText = "";
+            modal.show();
+        }
+
+        function openEdit(id) {
+            var c = categories.find(function (x) { return x.id == id; });
+            editingId = id;
+            document.getElementById("modalTitle").innerText = "Sửa danh mục";
+            document.getElementById("name").value = c.name;
+            document.getElementById("description").value = c.description ?? "";
+            document.getElementById("error").innerText = "";
+            modal.show();
+        }
+
+        async function save() {
+            var name = document.getElementById("name").value;
+            var description = document.getElementById("description").value;
+            if (name.trim() == "") {
+                document.getElementById("error").innerText = "Tên danh mục không được để trống";
+                return;
+            }
+            var res;
+            if (editingId == 0) {
+                res = await fetch("/Categories/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: name, description: description })
+                });
+            } else {
+                // giữ nguyên trạng thái xóa của danh mục đang sửa
+                var c = categories.find(function (x) { return x.id == editingId; });
+                res = await fetch("/Categories/update/" + editingId, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: name, description: description, isDeleted: c.isDeleted })
+                });
+            }
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (res.ok) {
+                modal.hide();
+                loadData();
+            } else {
+                document.getElementById("error").innerText = await res.text();
+            }
+        }
+
+        async function remove(id) {
+            if (!confirm("Bạn có chắc muốn xóa danh mục này?")) {
+                return;
+            }
+            var res = await fetch("/Categories/delete/" + id, { method: "DELETE" });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (res.ok) {
+                loadData();
+            } else {
+                alert(await res.text());
+            }
+        }
+
+        async function restore(id) {
+            var c = categories.find(function (x) { return x.id == id; });
+            var res = await fetch("/Categories/restore/" + id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: c.name, description: c.description, isDeleted: false })
+            });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (res.ok) {
+                loadData();
+            } else {
+                alert(await res.text());
+            }
+        }
+
+        loadData();
+    </script>
+}
