@@ -393,14 +393,14 @@
     <!-- HEADER -->
     <header class="header">
         <div class="container header-content">
-            <a href="/products/page" class="logo">
+            <a href="/" class="logo">
                 <i class="fa-solid fa-shoe-prints"></i>
                 BUBU Shoes
             </a>
 
             <nav class="menu">
-                <a href="/products/page">Trang chủ</a>
-                <a href="/products/detail/${product.id}">Sản phẩm</a>
+                <a href="/">Trang chủ</a>
+                <a href="#products">Sản phẩm</a>
                 <a href="#services">Dịch vụ</a>
                 <a href="#footer">Liên hệ</a>
             </nav>
@@ -593,16 +593,18 @@
                     return `
                         <div class="product-card">
 
-                            <img class="product-image"
-                                 src="${image}"
-                                 alt="${escapeHtml(product.name)}"
-                                 onerror="this.src='https://placehold.co/400x300?text=No+Image'">
+                                      <a href="/products/detail/${product.id}">
+                <img class="product-image"
+                     src="${image}"
+                     alt="${escapeHtml(product.name)}"
+                     onerror="this.src='https://placehold.co/400x300?text=No+Image'">
+            </a>
 
                             <div class="product-info">
 
-                                <div class="product-name">
-                                    ${escapeHtml(product.name)}
-                                </div>
+                                           <a href="/products/detail/${product.id}" class="product-name">
+                ${escapeHtml(product.name)}
+            </a>
 
                                 <div class="product-code">
                                     Mã: ${escapeHtml(product.code)}
@@ -614,10 +616,10 @@
 
                                 <div class="product-actions">
 
-                                    <a class="detail-btn"
-                                       href="/products/detail/${product.id}">
-                                        Chi tiết
-                                    </a>
+                                               <a class="detail-btn"
+               href="/products/detail/${product.id}">
+                Chi tiết
+            </a>
 
                                     <button class="favorite-btn"
                                             onclick="toggleFavorite(this, ${product.id})">
