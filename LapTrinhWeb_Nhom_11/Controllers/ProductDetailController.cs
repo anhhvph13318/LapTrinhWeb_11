@@ -24,10 +24,19 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             productDetail.Name = product.Name;
             foreach (var item in productDetailDTO)
             {
-                var size = dbContext.Sizes.Where(c => c.Id == item.SizeId).Select(c => c.Name).FirstOrDefault();
-                productDetail.Sizes.Add(size);
-                var color = dbContext.Colors.Where(c => c.Id == item.ColorId).Select(c => c.Name).FirstOrDefault();
-                productDetail.Colors.Add(color);
+                var size = dbContext.Sizes.Where(c => c.Id == item.SizeId).FirstOrDefault();
+                SizeDTO sizeDTO = new SizeDTO();
+                sizeDTO.Name = size.Name;
+                sizeDTO.Id = size.Id;
+
+                var color = dbContext.Colors.Where(c => c.Id == item.ColorId).FirstOrDefault();
+                ColorDTO colorDTO = new ColorDTO();
+                colorDTO.Id = color.Id;
+                colorDTO.Name = color.Name;
+                colorDTO.HexCode = color.HexCode;
+
+                productDetail.Sizes.Add(sizeDTO);
+                productDetail.Colors.Add(colorDTO);
             }
             productDetail.Quantity = productDetailDTO.Count();
             // Loại bỏ các phần tử trùng nhau

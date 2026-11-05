@@ -14,9 +14,9 @@
 
         public string Name { get; set; }
 
-        public List<string> Sizes { get; set; } = [];
+        public List<SizeDTO> Sizes { get; set; } = [];
 
-        public List<string> Colors { get; set; } = [];
+        public List<ColorDTO> Colors { get; set; } = [];
 
     }
 }
