@@ -14,7 +14,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         public IActionResult GetImage(int id)
         {
             AppDbContext dbContext = new AppDbContext();
-            var images = dbContext.Images.ToList();
+            var images = dbContext.Images.Where(c => c.Id == id).ToList();
             var image = images.Where(c => c.Id == id).FirstOrDefault();
             return File(image.Data, image.ContentType);
         }
