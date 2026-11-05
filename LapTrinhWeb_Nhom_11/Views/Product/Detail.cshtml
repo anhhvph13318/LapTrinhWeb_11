@@ -361,7 +361,7 @@
     </footer>
 
     <script>
-            const API_URL = "/product";
+            const API_URL = "/products";
             const PRODUCT_ID = @productId;
 
             let currentProduct = null;
@@ -392,12 +392,19 @@
 
             async function loadProduct() {
                 try {
-                    const response = await fetch(API_URL);
+                    const [productResponse, detailResponse] = await Promise.all([
+                        fetch(API_URL),
+                        fetch(`/ProductDetail/${PRODUCT_ID}`)
+                    ]);
 
-                    if (!response.ok)
-                        throw new Error("Không thể tải dữ liệu sản phẩm");
+                    if (!productResponse.ok)
+                        throw new Error("Không thể tải danh sách sản phẩm");
 
-                    const products = await response.json();
+                    if (!detailResponse.ok)
+                        throw new Error("Không thể tải thông tin size và màu sắc");
+
+                    const products = await productResponse.json();
+                    const detail = await detailResponse.json();
 
                     currentProduct = products.find(p =>
                         Number(p.id) === Number(PRODUCT_ID) && !p.isDeleted
@@ -406,8 +413,31 @@
                     if (!currentProduct)
                         throw new Error("Không tìm thấy sản phẩm");
 
-                    variants = currentProduct.productDetails || [];
+                    // Lấy danh sách phiên bản sản phẩm
+                    const productVariants = currentProduct.productDetails || [];
 
+                    // Lấy danh sách size và màu từ API ProductDetail
+                    const sizeNames = detail.sizes || [];
+                    const colorNames = detail.colors || [];
+
+                    // Ghép ID với tên size và màu
+                    variants = productVariants.map(v => {
+                        const size = sizeNames.find(s =>
+                            Number(s.id) === Number(v.sizeId)
+                        );
+
+                        const color = colorNames.find(c =>
+                            Number(c.id) === Number(v.colorId)
+                        );
+
+                        return {
+                            ...v,
+                            size: size?.name || "Không xác định",
+                            color: color?.name || "Không xác định"
+                        };
+                    });
+
+                    // Sắp xếp ảnh
                     images = [...(currentProduct.images || [])].sort((a, b) => {
                         if (a.isMain !== b.isMain)
                             return a.isMain ? -1 : 1;
