@@ -12,5 +12,11 @@
 
         public int ColorId { get; set; }
 
+        public string Name { get; set; }
+
+        public List<string> Sizes { get; set; } = [];
+
+        public List<string> Colors { get; set; } = [];
+
     }
 }
