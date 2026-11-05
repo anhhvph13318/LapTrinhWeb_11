@@ -16,7 +16,9 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         {
             AppDbContext appDbContext = new AppDbContext();
             ProductDTO productDTO = new ProductDTO();
-            var product = appDbContext.Products.ToList();
+            var product = appDbContext.Products
+      .Where(p => !p.IsDeleted)
+      .ToList();
             List<ProductDTO> productDTOs = product.Select(p => new ProductDTO
             {
                 Id = p.Id,
@@ -132,6 +134,26 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             product.IsDeleted = true;
             appDbContext.SaveChanges();
             return Ok("Xóa thành công");
+        }
+
+        // Hiển thị trang chi tiết sản phẩm
+        [HttpGet("detail/{id}")]
+        public IActionResult Detail(int id)
+        {
+            using (AppDbContext appDbContext = new AppDbContext())
+            {
+                var product = appDbContext.Products
+                    .FirstOrDefault(p => p.Id == id && !p.IsDeleted);
+
+                if (product == null)
+                {
+                    return NotFound("Không tìm thấy sản phẩm");
+                }
+
+                ViewBag.ProductId = id;
+
+                return View("~/Views/Product/Detail.cshtml");
+            }
         }
     }
 }

@@ -1,0 +1,701 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ - BUBU Shoes";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"]</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Be Vietnam Pro', sans-serif;
+                background: #F7F5FF;
+                color: #25254B;
+            }
+
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+
+            .container {
+                max-width: 1250px;
+                margin: auto;
+                padding: 0 20px;
+            }
+
+            /* HEADER */
+            .header {
+                background: white;
+                padding: 18px 0;
+                box-shadow: 0 2px 10px #00000008;
+            }
+
+            .header-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 20px;
+            }
+
+            .logo {
+                font-size: 25px;
+                font-weight: 800;
+                color: #6255D9;
+            }
+
+            .menu {
+                display: flex;
+                gap: 30px;
+                font-weight: 600;
+            }
+
+            .menu a:hover {
+                color: #6255D9;
+            }
+
+            /* BANNER */
+            .banner {
+                margin: 25px auto;
+                min-height: 350px;
+                padding: 55px;
+                border-radius: 25px;
+                background: linear-gradient(120deg, #6255D9, #A99AFF);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                color: white;
+                overflow: hidden;
+            }
+
+            .banner-content {
+                max-width: 600px;
+            }
+
+            .banner h1 {
+                font-size: 42px;
+                font-weight: 800;
+                margin-bottom: 15px;
+            }
+
+            .banner p {
+                font-size: 16px;
+                line-height: 1.8;
+                margin-bottom: 25px;
+            }
+
+            .banner-btn {
+                display: inline-block;
+                background: white;
+                color: #6255D9;
+                padding: 14px 28px;
+                border-radius: 30px;
+                font-weight: 700;
+            }
+
+            .banner-icon {
+                font-size: 130px;
+                opacity: .9;
+                padding-right: 40px;
+            }
+
+            /* SERVICE */
+            .service-box {
+                background: #C8F7D5;
+                border-radius: 24px;
+                padding: 25px;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 25px;
+                margin: 25px 0;
+            }
+
+            .service-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .service-icon {
+                min-width: 42px;
+                height: 42px;
+                background: white;
+                color: #6255D9;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+            }
+
+            .service-item h4 {
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+
+            .service-item p {
+                font-size: 12px;
+                color: #777;
+            }
+
+            /* PRODUCTS */
+            .section-title {
+                margin-top: 35px;
+                font-size: 32px;
+                font-weight: 800;
+                color: #6255D9;
+            }
+
+            .section-description {
+                margin-top: 8px;
+                color: #6B7090;
+                font-size: 14px;
+            }
+
+            .product-grid {
+                display: grid;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                gap: 20px;
+                margin-top: 25px;
+            }
+
+            .product-card {
+                background: white;
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: 0 4px 15px #00000008;
+                transition: .25s;
+                position: relative;
+            }
+
+            .product-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px #00000015;
+            }
+
+            .product-image {
+                width: 100%;
+                height: 210px;
+                object-fit: cover;
+                background: #F1F0F8;
+            }
+
+            .product-info {
+                padding: 15px;
+            }
+
+            .product-name {
+                font-size: 14px;
+                font-weight: 700;
+                height: 42px;
+                overflow: hidden;
+            }
+
+            .product-code {
+                font-size: 12px;
+                color: #999;
+                margin-top: 6px;
+            }
+
+            .product-price {
+                color: #F15A85;
+                font-weight: 800;
+                font-size: 17px;
+                margin-top: 12px;
+            }
+
+            .product-actions {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 12px;
+            }
+
+            .detail-btn {
+                background: #6255D9;
+                color: white;
+                padding: 9px 14px;
+                border-radius: 20px;
+                font-size: 12px;
+            }
+
+            .favorite-btn {
+                border: none;
+                background: transparent;
+                font-size: 20px;
+                color: #aaa;
+                cursor: pointer;
+            }
+
+            .favorite-btn.active {
+                color: #F15A85;
+            }
+
+            .empty {
+                text-align: center;
+                padding: 50px 10px;
+                color: #6B7090;
+                grid-column: 1 / -1;
+            }
+
+            /* PROMOTION */
+            .promotion {
+                margin: 35px 0;
+                background: #FF5C8A;
+                color: white;
+                padding: 45px;
+                border-radius: 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 25px;
+            }
+
+            .promotion h2 {
+                font-size: 30px;
+                margin-bottom: 12px;
+            }
+
+            .promotion p {
+                font-size: 14px;
+            }
+
+            .email-form {
+                display: flex;
+                background: white;
+                border-radius: 30px;
+                padding: 5px;
+                width: 400px;
+            }
+
+            .email-form input {
+                border: none;
+                outline: none;
+                padding: 12px 15px;
+                flex: 1;
+                min-width: 0;
+                border-radius: 30px;
+            }
+
+            .email-form button {
+                border: none;
+                background: #6255D9;
+                color: white;
+                padding: 12px 22px;
+                border-radius: 25px;
+                cursor: pointer;
+            }
+
+            /* FOOTER */
+            .footer {
+                background: #25254B;
+                color: white;
+                padding: 35px 20px;
+                text-align: center;
+                margin-top: 25px;
+            }
+
+            .footer p {
+                margin-top: 10px;
+                color: #ccc;
+                font-size: 13px;
+            }
+
+            @@media (max-width: 1000px) {
+                .product-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+
+                .service-box {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+
+            @@media (max-width: 600px) {
+                .container {
+                    padding: 0 15px;
+                }
+
+                .menu {
+                    display: none;
+                }
+
+                .banner {
+                    padding: 30px 22px;
+                    min-height: 280px;
+                }
+
+                .banner h1 {
+                    font-size: 29px;
+                }
+
+                .banner-icon {
+                    display: none;
+                }
+
+                .service-box {
+                    grid-template-columns: 1fr;
+                }
+
+                .product-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 12px;
+                }
+
+                .product-image {
+                    height: 155px;
+                }
+
+                .product-info {
+                    padding: 10px;
+                }
+
+                .product-price {
+                    font-size: 15px;
+                }
+
+                .promotion {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    padding: 25px;
+                }
+
+                .promotion h2 {
+                    font-size: 23px;
+                }
+
+                .email-form {
+                    width: 100%;
+                }
+            }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container header-content">
+            <a href="/products/page" class="logo">
+                <i class="fa-solid fa-shoe-prints"></i>
+                BUBU Shoes
+            </a>
+
+            <nav class="menu">
+                <a href="/products/page">Trang chủ</a>
+                <a href="/products/detail/${product.id}">Sản phẩm</a>
+                <a href="#services">Dịch vụ</a>
+                <a href="#footer">Liên hệ</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- BANNER -->
+        <section class="banner">
+            <div class="banner-content">
+                <h1>Khám phá phong cách của bạn</h1>
+                <p>
+                    Bộ sưu tập giày mới nhất, thiết kế hiện đại,
+                    thoải mái và phù hợp với mọi phong cách.
+                </p>
+                <a href="#products" class="banner-btn">
+                    Khám phá ngay
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="banner-icon">
+                <i class="fa-solid fa-shoe-prints"></i>
+            </div>
+        </section>
+
+        <!-- SERVICES -->
+        <section id="services" class="service-box">
+
+            <div class="service-item">
+                <div class="service-icon">
+                    <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <div>
+                    <h4>Giao nhanh toàn quốc</h4>
+                    <p>Nhận hàng sau 1–3 ngày</p>
+                </div>
+            </div>
+
+            <div class="service-item">
+                <div class="service-icon">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </div>
+                <div>
+                    <h4>Đổi size trong 30 ngày</h4>
+                    <p>Không vừa chân, đổi miễn phí</p>
+                </div>
+            </div>
+
+            <div class="service-item">
+                <div class="service-icon">
+                    <i class="fa-solid fa-certificate"></i>
+                </div>
+                <div>
+                    <h4>Chính hãng 100%</h4>
+                    <p>Bảo hành đế và đường may</p>
+                </div>
+            </div>
+
+            <div class="service-item">
+                <div class="service-icon">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </div>
+                <div>
+                    <h4>Trả tiền khi nhận hàng</h4>
+                    <p>Kiểm tra giày rồi mới thanh toán</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PRODUCTS -->
+        <section id="products">
+
+            <h2 class="section-title">Sản phẩm mới</h2>
+
+            <p class="section-description">
+                Những đôi giày mới trong tháng.
+            </p>
+
+            <div id="productList" class="product-grid">
+                <div class="empty">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Đang tải sản phẩm...
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PROMOTION -->
+        <section class="promotion">
+
+            <div>
+                <h2>Nhận ngay 100.000đ<br />cho đơn đầu tiên</h2>
+
+                <p>
+                    Đăng ký email để nhận mã giảm giá và
+                    thông báo khi có mẫu mới.
+                </p>
+            </div>
+
+            <form class="email-form" onsubmit="registerEmail(event)">
+                <input type="email"
+                       id="email"
+                       placeholder="Email của bạn"
+                       required />
+
+                <button type="submit">Đăng ký</button>
+            </form>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer id="footer" class="footer">
+        <h3>BUBU Shoes</h3>
+        <p>Hệ thống cửa hàng giày thời trang</p>
+        <p>© 2026 BUBU Shoes. All rights reserved.</p>
+    </footer>
+
+    <script>
+            const API_URL = "/products";
+
+            // Lấy danh sách sản phẩm từ API C#
+            async function getProducts() {
+                const container = document.getElementById("productList");
+
+                try {
+                    const response = await fetch(API_URL);
+
+                    if (!response.ok) {
+                        throw new Error("Không thể lấy danh sách sản phẩm");
+                    }
+
+                    const products = await response.json();
+
+                    // Lọc sản phẩm chưa bị xóa
+                    const activeProducts = products.filter(p => !p.isDeleted);
+
+                    // Lấy 10 sản phẩm cuối cùng
+                    const latestProducts = activeProducts.slice(-10).reverse();
+
+                    renderProducts(latestProducts);
+
+                } catch (error) {
+                    console.error(error);
+
+                    container.innerHTML = `
+                        <div class="empty">
+                            Không thể tải danh sách sản phẩm.
+                            Vui lòng thử lại sau.
+                        </div>
+                    `;
+                }
+            }
+
+            // Hiển thị sản phẩm
+            function renderProducts(products) {
+                const container = document.getElementById("productList");
+
+                if (!products || products.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty">
+                            Chưa có sản phẩm nào.
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = products.map(product => {
+
+                    const mainImage = product.images?.find(x => x.isMain)
+                        || product.images?.[0];
+
+                    const imageUrl = mainImage?.imageUrl
+                        || product.imageUrl
+                        || "";
+
+                    const image = imageUrl
+                        ? imageUrl.startsWith("http")
+                            ? imageUrl
+                            : "/" + imageUrl.replace(/^\/+/, "")
+                        : "https://placehold.co/400x300?text=No+Image";
+
+                    const price = Number(product.price || 0)
+                        .toLocaleString("vi-VN") + "đ";
+
+                    return `
+                        <div class="product-card">
+
+                            <img class="product-image"
+                                 src="${image}"
+                                 alt="${escapeHtml(product.name)}"
+                                 onerror="this.src='https://placehold.co/400x300?text=No+Image'">
+
+                            <div class="product-info">
+
+                                <div class="product-name">
+                                    ${escapeHtml(product.name)}
+                                </div>
+
+                                <div class="product-code">
+                                    Mã: ${escapeHtml(product.code)}
+                                </div>
+
+                                <div class="product-price">
+                                    ${price}
+                                </div>
+
+                                <div class="product-actions">
+
+                                    <a class="detail-btn"
+                                       href="/products/detail/${product.id}">
+                                        Chi tiết
+                                    </a>
+
+                                    <button class="favorite-btn"
+                                            onclick="toggleFavorite(this, ${product.id})">
+                                        <i class="fa-regular fa-heart"></i>
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            }
+
+            // Chống đưa dữ liệu dạng HTML vào nội dung hiển thị
+            function escapeHtml(value) {
+                return String(value ?? "").replace(/[&<>"']/g, char => ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                })[char]);
+            }
+
+            // Yêu thích: lưu trạng thái trên trình duyệt
+            function toggleFavorite(button, productId) {
+                let favorites = JSON.parse(
+                    localStorage.getItem("favoriteProducts") || "[]"
+                );
+
+                const index = favorites.indexOf(productId);
+
+                if (index === -1) {
+                    favorites.push(productId);
+                } else {
+                    favorites.splice(index, 1);
+                }
+
+                localStorage.setItem(
+                    "favoriteProducts",
+                    JSON.stringify(favorites)
+                );
+
+                updateFavoriteButtons();
+            }
+
+            function updateFavoriteButtons() {
+                const favorites = JSON.parse(
+                    localStorage.getItem("favoriteProducts") || "[]"
+                );
+
+                document.querySelectorAll(".favorite-btn").forEach(button => {
+                    const id = Number(
+                        button.getAttribute("onclick").match(/\d+/)[0]
+                    );
+
+                    const liked = favorites.includes(id);
+
+                    button.classList.toggle("active", liked);
+
+                    button.innerHTML = liked
+                        ? '<i class="fa-solid fa-heart"></i>'
+                        : '<i class="fa-regular fa-heart"></i>';
+                });
+            }
+
+            // Đăng ký email (chưa kết nối API)
+            function registerEmail(event) {
+                event.preventDefault();
+
+                const email = document.getElementById("email").value;
+
+                alert("Email của bạn: " + email);
+            }
+
+            // Khởi chạy
+            getProducts();
+    </script>
+
+</body>
+</html>

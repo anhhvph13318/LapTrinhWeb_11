@@ -1,0 +1,753 @@
+﻿@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+    Layout = null;
+    var productId = ViewBag.ProductId;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Be Vietnam Pro', sans-serif;
+                background: #fff;
+                color: #14183A;
+            }
+
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: auto;
+                padding: 20px;
+            }
+
+            header {
+                padding: 18px 0;
+                box-shadow: 0 2px 10px #00000008;
+            }
+
+            .header-content {
+                max-width: 1200px;
+                margin: auto;
+                padding: 0 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo {
+                font-size: 24px;
+                font-weight: 800;
+                color: #6255D9;
+            }
+
+            .back {
+                display: inline-block;
+                color: #6255D9;
+                font-weight: 700;
+                margin-bottom: 25px;
+            }
+
+            .detail-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 45px;
+            }
+
+            .main-image {
+                width: 100%;
+                aspect-ratio: 1.1;
+                object-fit: cover;
+                border-radius: 24px;
+                background: #f1f0f8;
+                box-shadow: 0 10px 25px #00000012;
+            }
+
+            .thumbnail-list {
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
+                overflow-x: auto;
+            }
+
+            .thumbnail {
+                width: 75px;
+                height: 75px;
+                object-fit: cover;
+                border-radius: 12px;
+                cursor: pointer;
+                border: 2px solid #ddd;
+            }
+
+                .thumbnail.active {
+                    border-color: #6255D9;
+                }
+
+            .product-name {
+                font-size: 28px;
+                font-weight: 800;
+                line-height: 1.4;
+            }
+
+            .price {
+                font-size: 32px;
+                font-weight: 800;
+                color: #FF5C8A;
+                margin: 15px 0 25px;
+            }
+
+            .line {
+                border: 0;
+                border-top: 1px solid #E6E3F5;
+                margin-bottom: 25px;
+            }
+
+            .label {
+                font-weight: 700;
+                margin: 20px 0 12px;
+            }
+
+            .options {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .option {
+                padding: 10px 17px;
+                border: 1.5px solid #ddd;
+                background: white;
+                border-radius: 13px;
+                cursor: pointer;
+                font-weight: 700;
+            }
+
+                .option.active {
+                    background: #6255D9;
+                    border-color: #6255D9;
+                    color: white;
+                }
+
+                .option:disabled {
+                    opacity: .3;
+                    cursor: not-allowed;
+                }
+
+            .stock {
+                color: #777;
+                font-size: 13px;
+                margin-top: 20px;
+            }
+
+            .buy-row {
+                display: flex;
+                gap: 15px;
+                margin-top: 15px;
+            }
+
+            .quantity {
+                height: 52px;
+                display: flex;
+                align-items: center;
+                border: 1px solid #E6E3F5;
+                border-radius: 30px;
+            }
+
+                .quantity button {
+                    border: none;
+                    background: none;
+                    width: 40px;
+                    height: 45px;
+                    cursor: pointer;
+                    font-size: 20px;
+                }
+
+                .quantity span {
+                    min-width: 25px;
+                    text-align: center;
+                    font-weight: 700;
+                }
+
+            .add-cart {
+                flex: 1;
+                background: #14183A;
+                color: white;
+                border: none;
+                border-radius: 30px;
+                font-weight: 700;
+                cursor: pointer;
+                padding: 12px;
+            }
+
+            .favorite {
+                border: none;
+                background: white;
+                font-size: 25px;
+                cursor: pointer;
+                color: #FF5C8A;
+            }
+
+            .description {
+                margin-top: 30px;
+                border-top: 1px solid #E6E3F5;
+            }
+
+                .description details {
+                    padding: 18px 0;
+                    border-bottom: 1px solid #E6E3F5;
+                }
+
+                .description summary {
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+
+                .description p {
+                    color: #666;
+                    line-height: 1.8;
+                    margin-top: 12px;
+                }
+
+            .recommend-title {
+                font-size: 24px;
+                font-weight: 800;
+                margin: 55px 0 20px;
+            }
+
+            .recommend-list {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 18px;
+            }
+
+            .recommend-card {
+                border-radius: 15px;
+                overflow: hidden;
+                box-shadow: 0 4px 15px #00000010;
+                cursor: pointer;
+                transition: .2s;
+            }
+
+                .recommend-card:hover {
+                    transform: translateY(-5px);
+                }
+
+                .recommend-card img {
+                    width: 100%;
+                    aspect-ratio: 1;
+                    object-fit: cover;
+                    background: #f1f0f8;
+                }
+
+            .recommend-info {
+                padding: 12px;
+            }
+
+                .recommend-info h4 {
+                    font-size: 13px;
+                    min-height: 38px;
+                }
+
+                .recommend-info p {
+                    color: #FF5C8A;
+                    font-weight: 800;
+                    margin-top: 8px;
+                }
+
+            .loading {
+                text-align: center;
+                padding: 50px;
+                color: #777;
+            }
+
+            .error {
+                text-align: center;
+                padding: 50px;
+                color: #e44;
+            }
+
+            footer {
+                background: #25254B;
+                color: white;
+                text-align: center;
+                padding: 35px;
+                margin-top: 60px;
+            }
+
+            @@media(max-width: 800px) {
+                .detail-layout {
+                    grid-template-columns: 1fr;
+                    gap: 25px;
+                }
+
+                .recommend-list {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+
+            @@media(max-width: 550px) {
+                .product-name {
+                    font-size: 23px;
+                }
+
+                .price {
+                    font-size: 26px;
+                }
+
+                .recommend-list {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+
+                .buy-row {
+                    flex-wrap: wrap;
+                }
+
+                .add-cart {
+                    min-height: 52px;
+                }
+            }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo">
+                <i class="fa-solid fa-shoe-prints"></i> SHOE STORE
+            </a>
+            <a href="/" class="back">Trang chủ</a>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <a href="/" class="back">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại
+        </a>
+
+        <div id="detailContent" class="loading">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Đang tải thông tin sản phẩm...
+        </div>
+
+        <h2 class="recommend-title">Có thể bạn cũng thích</h2>
+        <div id="recommendList" class="recommend-list">
+        </div>
+
+    </main>
+
+    <footer>
+        <h3>SHOE STORE</h3>
+        <p>Hệ thống cửa hàng giày thời trang</p>
+        <p>© 2026 Shoe Store. All rights reserved.</p>
+    </footer>
+
+    <script>
+            const API_URL = "/products";
+            const PRODUCT_ID = @productId;
+
+            let currentProduct = null;
+            let selectedImage = 0;
+            let selectedSizeId = null;
+            let selectedColorId = null;
+            let quantity = 1;
+
+            let variants = [];
+            let images = [];
+
+            const money = value =>
+                Number(value || 0).toLocaleString("vi-VN") + "đ";
+
+            const escapeHtml = value =>
+                String(value ?? "").replace(/[&<>"']/g, c => ({
+                    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+                    '"': "&quot;", "'": "&#39;"
+                })[c]);
+
+            function imageUrl(url) {
+                if (!url) return "https://placehold.co/500x500?text=No+Image";
+
+                if (url.startsWith("http")) return url;
+
+                return "/" + url.replace(/^\/+/, "");
+            }
+
+            async function loadProduct() {
+                try {
+                    const response = await fetch(API_URL);
+
+                    if (!response.ok)
+                        throw new Error("Không thể tải dữ liệu sản phẩm");
+
+                    const products = await response.json();
+
+                    currentProduct = products.find(p =>
+                        Number(p.id) === Number(PRODUCT_ID) && !p.isDeleted
+                    );
+
+                    if (!currentProduct)
+                        throw new Error("Không tìm thấy sản phẩm");
+
+                    variants = currentProduct.productDetails || [];
+
+                    images = [...(currentProduct.images || [])].sort((a, b) => {
+                        if (a.isMain !== b.isMain)
+                            return a.isMain ? -1 : 1;
+
+                        return (a.sortOrder || 0) - (b.sortOrder || 0);
+                    });
+
+                    renderDetail();
+                    renderRecommendations(products);
+
+                } catch (error) {
+                    console.error(error);
+
+                    document.getElementById("detailContent").innerHTML =
+                        `<div class="error">${escapeHtml(error.message)}</div>`;
+                }
+            }
+
+            function getMainImage() {
+                return images[selectedImage]?.imageUrl
+                    || currentProduct.imageUrl;
+            }
+
+            function getSizeOptions() {
+                return [...new Map(
+                    variants.map(v => [v.sizeId, v])
+                ).values()];
+            }
+
+            function getColorOptions() {
+                return [...new Map(
+                    variants.map(v => [v.colorId, v])
+                ).values()];
+            }
+
+            function getSelectedVariant() {
+                return variants.find(v =>
+                    Number(v.sizeId) === Number(selectedSizeId) &&
+                    Number(v.colorId) === Number(selectedColorId)
+                );
+            }
+
+            function isSizeAvailable(sizeId) {
+                return variants.some(v =>
+                    Number(v.sizeId) === Number(sizeId) &&
+                    v.quantity > 0 &&
+                    (selectedColorId === null ||
+                        Number(v.colorId) === Number(selectedColorId))
+                );
+            }
+
+            function isColorAvailable(colorId) {
+                return variants.some(v =>
+                    Number(v.colorId) === Number(colorId) &&
+                    v.quantity > 0 &&
+                    (selectedSizeId === null ||
+                        Number(v.sizeId) === Number(selectedSizeId))
+                );
+            }
+
+            function renderDetail() {
+                const p = currentProduct;
+
+                document.getElementById("detailContent").className = "";
+
+                document.getElementById("detailContent").innerHTML = `
+                        <div class="detail-layout">
+
+                            <div>
+                                <img id="mainImage"
+                                     class="main-image"
+                                     src="${imageUrl(getMainImage())}"
+                                     onerror="this.src='https://placehold.co/500x500?text=No+Image'">
+
+                                <div class="thumbnail-list">
+                                    ${images.map((img, i) => `
+                                        <img class="thumbnail ${i === selectedImage ? 'active' : ''}"
+                                             src="${imageUrl(img.imageUrl)}"
+                                             onclick="changeImage(${i})">
+                                    `).join("")}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="display:flex;justify-content:space-between;gap:15px">
+                                    <h1 class="product-name">${escapeHtml(p.name)}</h1>
+
+                                    <button class="favorite" onclick="toggleFavorite()">
+                                        <i id="favoriteIcon" class="fa-regular fa-heart"></i>
+                                    </button>
+                                </div>
+
+                                <div class="price">${money(p.price)}</div>
+
+                                <hr class="line">
+
+                                ${renderSizeOptions()}
+                                ${renderColorOptions()}
+
+                                <p class="stock" id="stockText">
+                                    Tổng còn ${variants.reduce((sum, v) =>
+                    sum + Number(v.quantity || 0), 0)} sản phẩm
+                                </p>
+
+                                <div class="label">Số lượng</div>
+
+                                <div class="buy-row">
+                                    <div class="quantity">
+                                        <button onclick="changeQuantity(-1)">−</button>
+                                        <span id="quantityValue">1</span>
+                                        <button onclick="changeQuantity(1)">+</button>
+                                    </div>
+
+                                    <button class="add-cart" onclick="addToCart()">
+                                        <i class="fa-solid fa-bag-shopping"></i>
+                                        Thêm vào giỏ · ${money(p.price)}
+                                    </button>
+                                </div>
+
+                                <div class="description">
+                                    <details open>
+                                        <summary>Mô tả sản phẩm</summary>
+                                        <p>${escapeHtml(p.description || "Chưa có mô tả sản phẩm.")}</p>
+                                    </details>
+
+                                    <details>
+                                        <summary>Giao hàng & đổi trả</summary>
+                                        <p>Miễn phí vận chuyển cho đơn từ 500.000đ. Đổi size trong 7 ngày nếu sản phẩm chưa qua sử dụng và còn nguyên hộp.</p>
+                                    </details>
+
+                                    <details>
+                                        <summary>Hướng dẫn bảo quản</summary>
+                                        <p>Lau bằng khăn ẩm, tránh ngâm nước lâu. Phơi nơi thoáng mát, tránh ánh nắng trực tiếp.</p>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                updateFavoriteIcon();
+            }
+
+            function renderSizeOptions() {
+                const options = getSizeOptions();
+
+                if (!options.length) return "";
+
+                return `
+                        <div class="label">Chọn size</div>
+                        <div class="options">
+                            ${options.map(v => {
+                    const active = Number(selectedSizeId) === Number(v.sizeId);
+                    const enabled = active || isSizeAvailable(v.sizeId);
+
+                    return `
+                                    <button class="option ${active ? 'active' : ''}"
+                                            ${enabled ? "" : "disabled"}
+                                            onclick="selectSize(${v.sizeId})">
+                                        ${escapeHtml(v.size ?? v.sizeId)}
+                                    </button>
+                                `;
+                }).join("")}
+                        </div>
+                    `;
+            }
+
+            function renderColorOptions() {
+                const options = getColorOptions();
+
+                if (!options.length) return "";
+
+                return `
+                        <div class="label">Chọn màu</div>
+                        <div class="options">
+                            ${options.map(v => {
+                    const active = Number(selectedColorId) === Number(v.colorId);
+                    const enabled = active || isColorAvailable(v.colorId);
+
+                    return `
+                                    <button class="option ${active ? 'active' : ''}"
+                                            ${enabled ? "" : "disabled"}
+                                            onclick="selectColor(${v.colorId})">
+                                        ${escapeHtml(v.color ?? v.colorId)}
+                                    </button>
+                                `;
+                }).join("")}
+                        </div>
+                    `;
+            }
+
+            function changeImage(index) {
+                selectedImage = index;
+
+                document.getElementById("mainImage").src =
+                    imageUrl(getMainImage());
+
+                document.querySelectorAll(".thumbnail").forEach((img, i) => {
+                    img.classList.toggle("active", i === index);
+                });
+            }
+
+            function selectSize(id) {
+                selectedSizeId = Number(selectedSizeId) === Number(id) ? null : id;
+
+                if (selectedColorId !== null &&
+                    !isColorAvailable(selectedColorId)) {
+                    selectedColorId = null;
+                }
+
+                quantity = 1;
+                refreshOptions();
+            }
+
+            function selectColor(id) {
+                selectedColorId = Number(selectedColorId) === Number(id) ? null : id;
+
+                if (selectedSizeId !== null &&
+                    !isSizeAvailable(selectedSizeId)) {
+                    selectedSizeId = null;
+                }
+
+                quantity = 1;
+                refreshOptions();
+            }
+
+            function refreshOptions() {
+                const content = document.getElementById("detailContent");
+
+                // Cập nhật phần lựa chọn và thông tin tồn kho.
+                renderDetail();
+            }
+
+            function getMaxQuantity() {
+                const v = getSelectedVariant();
+
+                return Math.max(1, Math.min(10, Number(v?.quantity || 0)));
+            }
+
+            function changeQuantity(value) {
+                const max = getMaxQuantity();
+
+                quantity = Math.max(1, Math.min(max, quantity + value));
+
+                document.getElementById("quantityValue").textContent = quantity;
+
+                document.querySelector(".add-cart").innerHTML =
+                    `<i class="fa-solid fa-bag-shopping"></i>
+                         Thêm vào giỏ · ${money(currentProduct.price * quantity)}`;
+            }
+
+            function addToCart() {
+                if (variants.length && selectedSizeId === null) {
+                    alert("Vui lòng chọn size");
+                    return;
+                }
+
+                if (variants.length && selectedColorId === null) {
+                    alert("Vui lòng chọn màu");
+                    return;
+                }
+
+                const variant = getSelectedVariant();
+
+                if (!variant || variant.quantity <= 0) {
+                    alert("Phiên bản này đã hết hàng");
+                    return;
+                }
+
+                if (quantity > variant.quantity) {
+                    alert("Số lượng vượt quá tồn kho");
+                    return;
+                }
+
+                // TODO: Kết nối API OrderController để thêm vào giỏ hàng.
+                alert("Đã chọn phiên bản sản phẩm. Cần kết nối API giỏ hàng để lưu đơn.");
+            }
+
+            function toggleFavorite() {
+                let favorites = JSON.parse(
+                    localStorage.getItem("favoriteProducts") || "[]"
+                );
+
+                const index = favorites.indexOf(Number(PRODUCT_ID));
+
+                if (index === -1) {
+                    favorites.push(Number(PRODUCT_ID));
+                } else {
+                    favorites.splice(index, 1);
+                }
+
+                localStorage.setItem("favoriteProducts", JSON.stringify(favorites));
+
+                updateFavoriteIcon();
+            }
+
+            function updateFavoriteIcon() {
+                const icon = document.getElementById("favoriteIcon");
+                if (!icon) return;
+
+                const favorites = JSON.parse(
+                    localStorage.getItem("favoriteProducts") || "[]"
+                );
+
+                const liked = favorites.includes(Number(PRODUCT_ID));
+
+                icon.className = liked
+                    ? "fa-solid fa-heart"
+                    : "fa-regular fa-heart";
+            }
+
+            function renderRecommendations(products) {
+                const latest = products
+                    .filter(p => !p.isDeleted && Number(p.id) !== Number(PRODUCT_ID))
+                    .slice(-10)
+                    .reverse();
+
+                document.getElementById("recommendList").innerHTML =
+                    latest.map(p => {
+                        const main = p.images?.find(x => x.isMain)
+                            || p.images?.[0];
+
+                        const img = main?.imageUrl || p.imageUrl;
+
+                        return `
+                                <div class="recommend-card"
+                                     onclick="location.href='/products/detail/${p.id}'">
+                                    <img src="${imageUrl(img)}"
+                                         onerror="this.src='https://placehold.co/300x300?text=No+Image'">
+
+                                    <div class="recommend-info">
+                                        <h4>${escapeHtml(p.name)}</h4>
+                                        <p>${money(p.price)}</p>
+                                    </div>
+                                </div>
+                            `;
+                    }).join("");
+            }
+
+            loadProduct();
+    </script>
+
+</body>
+</html>
