@@ -1,0 +1,571 @@
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h3>Quản lý sản phẩm</h3>
+    <button type="button" class="btn btn-primary" onclick="openAdd()">Thêm sản phẩm</button>
+</div>
+
+<!-- bộ lọc -->
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <input type="text" id="fKeyword" class="form-control" placeholder="Tìm theo tên hoặc mã sản phẩm" />
+            </div>
+            <div class="col-md-3">
+                <select id="fCategory" class="form-select">
+                    <option value="">Tất cả danh mục</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="fStatus" class="form-select">
+                    <option value="">Tất cả trạng thái bán</option>
+                    <option value="1">Đang bán</option>
+                    <option value="0">Ngừng bán</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="fDeleted" class="form-select">
+                    <option value="false">Chưa xóa</option>
+                    <option value="true">Đã xóa</option>
+                    <option value="">Tất cả</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-2">
+            <div class="col-md-3">
+                <input type="number" min="0" id="fMinPrice" class="form-control" placeholder="Giá từ" />
+            </div>
+            <div class="col-md-3">
+                <input type="number" min="0" id="fMaxPrice" class="form-control" placeholder="Giá đến" />
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-primary" onclick="loadData()">Lọc</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetFilter()">Đặt lại</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered align-middle">
+    <thead>
+        <tr>
+            <th>Ảnh</th>
+            <th>Mã</th>
+            <th>Tên sản phẩm</th>
+            <th>Danh mục</th>
+            <th>Giá</th>
+            <th>Biến thể (size / màu: số lượng)</th>
+            <th>Tổng SL</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+</table>
+
+<!-- form thêm / sửa -->
+<div class="modal fade" id="productModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Thêm sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Mã sản phẩm</label>
+                        <input type="text" id="code" class="form-control" maxlength="20" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tên sản phẩm</label>
+                        <input type="text" id="name" class="form-control" maxlength="200" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Giá (đ)</label>
+                        <input type="number" min="0" id="price" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Danh mục</label>
+                        <select id="categoryId" class="form-select"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Trạng thái bán</label>
+                        <select id="status" class="form-select">
+                            <option value="1">Đang bán</option>
+                            <option value="0">Ngừng bán</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Mô tả</label>
+                        <textarea id="description" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- biến thể -->
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between">
+                        <b>Biến thể (màu, size, số lượng)</b>
+                        <button type="button" class="btn btn-sm btn-success" onclick="addVariant()">+ Thêm biến thể</button>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Màu</th>
+                                    <th>Size</th>
+                                    <th style="width: 150px;">Số lượng</th>
+                                    <th style="width: 60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="variantBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ảnh -->
+                <div class="card mb-3">
+                    <div class="card-header"><b>Ảnh sản phẩm</b> <span class="text-muted">(jpg, png, gif, webp, tối đa 5MB mỗi ảnh)</span></div>
+                    <div class="card-body">
+                        <input type="file" id="fileInput" class="form-control mb-3" accept="image/*" multiple />
+                        <div id="imageList" class="d-flex flex-wrap gap-3"></div>
+                    </div>
+                </div>
+
+                <div id="error" class="text-danger" style="white-space: pre-wrap;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="btnSave" onclick="save()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var products = [];
+        var options = { categories: [], colors: [], sizes: [] };
+        var editingId = 0;
+        var variantRows = [];   // mỗi biến thể: { id, colorId, sizeId, quantity }
+        var images = [];        // mỗi ảnh: { kind: "old" hoặc "new", id, file, url }
+        var mainIndex = 0;      // vị trí ảnh chính trong mảng images
+        var modal = new bootstrap.Modal(document.getElementById("productModal"));
+
+        // chống lỗi hiển thị khi dữ liệu có ký tự đặc biệt
+        function esc(text) {
+            return String(text ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // nếu hết phiên đăng nhập thì về trang login
+        function checkLogin(res) {
+            if (res.status == 401) {
+                window.location.href = "/login";
+                return false;
+            }
+            return true;
+        }
+
+        function nameOf(list, id) {
+            var item = list.find(function (x) { return x.id == id; });
+            return item ? item.name : "?";
+        }
+
+        // tạo các thẻ <option>; chỉ hiện mục đang dùng hoặc mục còn hoạt động
+        function optionsHtml(list, selectedId, isCategory) {
+            var html = "<option value=''>-- Chọn --</option>";
+            list.forEach(function (x) {
+                var ok = isCategory ? !x.isDeleted : x.isActive;
+                if (ok || x.id == selectedId) {
+                    html += "<option value='" + x.id + "'" + (x.id == selectedId ? " selected" : "") + ">" + esc(x.name) + "</option>";
+                }
+            });
+            return html;
+        }
+
+        // ===== tải dữ liệu =====
+        async function loadOptions() {
+            var res = await fetch("/products/options");
+            if (!checkLogin(res)) {
+                return;
+            }
+            options = await res.json();
+            // ô lọc danh mục
+            var html = "<option value=''>Tất cả danh mục</option>";
+            options.categories.forEach(function (c) {
+                html += "<option value='" + c.id + "'>" + esc(c.name) + (c.isDeleted ? " (đã xóa)" : "") + "</option>";
+            });
+            document.getElementById("fCategory").innerHTML = html;
+        }
+
+        async function loadData() {
+            var params = new URLSearchParams();
+            var keyword = document.getElementById("fKeyword").value.trim();
+            var categoryId = document.getElementById("fCategory").value;
+            var status = document.getElementById("fStatus").value;
+            var deleted = document.getElementById("fDeleted").value;
+            var minPrice = document.getElementById("fMinPrice").value;
+            var maxPrice = document.getElementById("fMaxPrice").value;
+            if (keyword != "") params.append("keyword", keyword);
+            if (categoryId != "") params.append("categoryId", categoryId);
+            if (status != "") params.append("status", status);
+            if (deleted != "") params.append("deleted", deleted);
+            if (minPrice != "") params.append("minPrice", minPrice);
+            if (maxPrice != "") params.append("maxPrice", maxPrice);
+
+            var res = await fetch("/products/admin?" + params.toString());
+            if (!checkLogin(res)) {
+                return;
+            }
+            products = await res.json();
+            render();
+        }
+
+        function resetFilter() {
+            document.getElementById("fKeyword").value = "";
+            document.getElementById("fCategory").value = "";
+            document.getElementById("fStatus").value = "";
+            document.getElementById("fDeleted").value = "false";
+            document.getElementById("fMinPrice").value = "";
+            document.getElementById("fMaxPrice").value = "";
+            loadData();
+        }
+
+        // ===== bảng danh sách =====
+        function render() {
+            var html = "";
+            if (products.length == 0) {
+                html = "<tr><td colspan='9' class='text-center text-muted'>Không có sản phẩm nào</td></tr>";
+            }
+            products.forEach(function (p) {
+                // ảnh thật nằm ở bảng Image (p.images): ưu tiên ảnh chính, không có thì lấy ảnh đầu tiên,
+                // cuối cùng mới dùng cột ImageUrl của sản phẩm (có thể bị trống hoặc cũ với dữ liệu nhập tay)
+                var mainImage = p.images.find(function (img) { return img.isMain; }) ?? p.images[0];
+                var thumbUrl = mainImage ? mainImage.imageUrl : p.imageUrl;
+                var thumb = thumbUrl
+                    ? "<img src='" + esc(thumbUrl) + "' style='width:60px;height:60px;object-fit:cover;' />"
+                    : "<span class='text-muted small'>Chưa có ảnh</span>";
+
+                var total = 0;
+                var variantHtml = "";
+                p.productDetails.forEach(function (d) {
+                    total += d.quantity;
+                    variantHtml += "<div class='small'>" + esc(nameOf(options.sizes, d.sizeId)) + " / " + esc(nameOf(options.colors, d.colorId)) + ": <b>" + d.quantity + "</b></div>";
+                });
+
+                var statusHtml = p.status == 1
+                    ? "<span class='badge bg-success'>Đang bán</span>"
+                    : "<span class='badge bg-warning text-dark'>Ngừng bán</span>";
+                if (p.isDeleted) {
+                    statusHtml += " <span class='badge bg-secondary'>Đã xóa</span>";
+                }
+
+                html += "<tr" + (p.isDeleted ? " class='text-muted'" : "") + ">";
+                html += "<td>" + thumb + "</td>";
+                html += "<td>" + esc(p.code) + "</td>";
+                html += "<td>" + esc(p.name) + "</td>";
+                html += "<td>" + esc(nameOf(options.categories, p.categoryId)) + "</td>";
+                html += "<td>" + Number(p.price).toLocaleString("vi-VN") + " đ</td>";
+                html += "<td>" + variantHtml + "</td>";
+                html += "<td>" + total + "</td>";
+                html += "<td>" + statusHtml + "</td>";
+                html += "<td>";
+                html += "<button class='btn btn-sm btn-warning me-1' onclick='openEdit(" + p.id + ")'>Sửa</button>";
+                if (p.isDeleted) {
+                    html += "<button class='btn btn-sm btn-success' onclick='restore(" + p.id + ")'>Khôi phục</button>";
+                } else {
+                    html += "<button class='btn btn-sm btn-danger' onclick='remove(" + p.id + ")'>Xóa</button>";
+                }
+                html += "</td></tr>";
+            });
+            document.getElementById("tbody").innerHTML = html;
+        }
+
+        // ===== biến thể trong form =====
+        function renderVariants() {
+            var html = "";
+            variantRows.forEach(function (v, i) {
+                html += "<tr data-id='" + v.id + "'>";
+                html += "<td><select class='form-select form-select-sm v-color'>" + optionsHtml(options.colors, v.colorId, false) + "</select></td>";
+                html += "<td><select class='form-select form-select-sm v-size'>" + optionsHtml(options.sizes, v.sizeId, false) + "</select></td>";
+                html += "<td><input type='number' min='0' class='form-control form-control-sm v-qty' value='" + v.quantity + "' /></td>";
+                html += "<td><button type='button' class='btn btn-sm btn-outline-danger' onclick='removeVariant(" + i + ")'>X</button></td>";
+                html += "</tr>";
+            });
+            if (variantRows.length == 0) {
+                html = "<tr><td colspan='4' class='text-center text-muted'>Chưa có biến thể nào</td></tr>";
+            }
+            document.getElementById("variantBody").innerHTML = html;
+        }
+
+        // đọc lại giá trị đang nhập trong bảng biến thể vào mảng variantRows
+        function syncVariants() {
+            var rows = document.querySelectorAll("#variantBody tr[data-id]");
+            variantRows = [];
+            rows.forEach(function (tr) {
+                variantRows.push({
+                    id: Number(tr.getAttribute("data-id")),
+                    colorId: tr.querySelector(".v-color").value,
+                    sizeId: tr.querySelector(".v-size").value,
+                    quantity: tr.querySelector(".v-qty").value
+                });
+            });
+        }
+
+        function addVariant() {
+            syncVariants();
+            variantRows.push({ id: 0, colorId: "", sizeId: "", quantity: 0 });
+            renderVariants();
+        }
+
+        function removeVariant(index) {
+            syncVariants();
+            variantRows.splice(index, 1);
+            renderVariants();
+        }
+
+        // ===== ảnh trong form =====
+        function renderImages() {
+            var html = "";
+            images.forEach(function (img, i) {
+                html += "<div class='border rounded p-2 text-center' style='width:130px;'>";
+                html += "<img src='" + esc(img.url) + "' style='width:110px;height:110px;object-fit:cover;' />";
+                html += "<div class='form-check mt-1'>";
+                html += "<input class='form-check-input' type='radio' name='mainImage' id='main" + i + "' " + (i == mainIndex ? "checked" : "") + " onchange='setMain(" + i + ")' />";
+                html += "<label class='form-check-label small' for='main" + i + "'>Ảnh chính</label>";
+                html += "</div>";
+                html += "<button type='button' class='btn btn-sm btn-outline-danger mt-1' onclick='removeImage(" + i + ")'>Xóa ảnh</button>";
+                html += "</div>";
+            });
+            if (images.length == 0) {
+                html = "<span class='text-muted'>Chưa có ảnh nào</span>";
+            }
+            document.getElementById("imageList").innerHTML = html;
+        }
+
+        function setMain(index) {
+            mainIndex = index;
+        }
+
+        function removeImage(index) {
+            if (images[index].kind == "new") {
+                URL.revokeObjectURL(images[index].url);
+            }
+            images.splice(index, 1);
+            if (index < mainIndex) {
+                mainIndex--;
+            } else if (index == mainIndex) {
+                mainIndex = 0;
+            }
+            renderImages();
+        }
+
+        document.getElementById("fileInput").addEventListener("change", function () {
+            var types = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+            var message = "";
+            Array.from(this.files).forEach(function (file) {
+                if (types.indexOf(file.type) < 0) {
+                    message = "Chỉ nhận ảnh jpg, png, gif, webp";
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    message = "Ảnh " + file.name + " lớn hơn 5MB";
+                    return;
+                }
+                images.push({ kind: "new", id: 0, file: file, url: URL.createObjectURL(file) });
+            });
+            document.getElementById("error").innerText = message;
+            this.value = ""; // cho phép chọn lại cùng 1 file
+            renderImages();
+        });
+
+        // ===== mở form =====
+        function fillCategory(selectedId) {
+            document.getElementById("categoryId").innerHTML = optionsHtml(options.categories, selectedId, true);
+        }
+
+        function openAdd() {
+            editingId = 0;
+            document.getElementById("modalTitle").innerText = "Thêm sản phẩm";
+            document.getElementById("code").value = "";
+            document.getElementById("name").value = "";
+            document.getElementById("price").value = "";
+            document.getElementById("status").value = "1";
+            document.getElementById("description").value = "";
+            document.getElementById("error").innerText = "";
+            fillCategory("");
+            variantRows = [{ id: 0, colorId: "", sizeId: "", quantity: 0 }];
+            images = [];
+            mainIndex = 0;
+            renderVariants();
+            renderImages();
+            modal.show();
+        }
+
+        function openEdit(id) {
+            var p = products.find(function (x) { return x.id == id; });
+            editingId = id;
+            document.getElementById("modalTitle").innerText = "Sửa sản phẩm";
+            document.getElementById("code").value = p.code;
+            document.getElementById("name").value = p.name;
+            document.getElementById("price").value = p.price;
+            document.getElementById("status").value = p.status;
+            document.getElementById("description").value = p.description ?? "";
+            document.getElementById("error").innerText = "";
+            fillCategory(p.categoryId);
+            variantRows = p.productDetails.map(function (d) {
+                return { id: d.id, colorId: d.colorId, sizeId: d.sizeId, quantity: d.quantity };
+            });
+            images = p.images.map(function (img) {
+                return { kind: "old", id: img.id, file: null, url: img.imageUrl };
+            });
+            mainIndex = p.images.findIndex(function (img) { return img.isMain; });
+            if (mainIndex < 0) {
+                mainIndex = 0;
+            }
+            renderVariants();
+            renderImages();
+            modal.show();
+        }
+
+        // ===== lưu =====
+        async function save() {
+            syncVariants();
+            var errorBox = document.getElementById("error");
+            var code = document.getElementById("code").value.trim();
+            var name = document.getElementById("name").value.trim();
+            var price = document.getElementById("price").value;
+            var categoryId = document.getElementById("categoryId").value;
+
+            if (code == "") { errorBox.innerText = "Mã sản phẩm không được để trống"; return; }
+            if (name == "") { errorBox.innerText = "Tên sản phẩm không được để trống"; return; }
+            if (price == "" || Number(price) < 0) { errorBox.innerText = "Giá không hợp lệ"; return; }
+            if (categoryId == "") { errorBox.innerText = "Vui lòng chọn danh mục"; return; }
+            if (variantRows.length == 0) { errorBox.innerText = "Cần có ít nhất 1 biến thể"; return; }
+
+            var pairs = [];
+            for (var i = 0; i < variantRows.length; i++) {
+                var v = variantRows[i];
+                if (v.colorId == "" || v.sizeId == "") {
+                    errorBox.innerText = "Biến thể số " + (i + 1) + " chưa chọn màu hoặc size";
+                    return;
+                }
+                if (v.quantity === "" || Number(v.quantity) < 0 || !Number.isInteger(Number(v.quantity))) {
+                    errorBox.innerText = "Số lượng của biến thể số " + (i + 1) + " không hợp lệ";
+                    return;
+                }
+                var pair = v.colorId + "-" + v.sizeId;
+                if (pairs.indexOf(pair) >= 0) {
+                    errorBox.innerText = "Biến thể số " + (i + 1) + " bị trùng màu và size";
+                    return;
+                }
+                pairs.push(pair);
+            }
+
+            var fd = new FormData();
+            fd.append("code", code);
+            fd.append("name", name);
+            fd.append("price", Math.round(Number(price))); // giá lưu là số nguyên
+            fd.append("description", document.getElementById("description").value);
+            fd.append("categoryId", categoryId);
+            fd.append("status", document.getElementById("status").value);
+            variantRows.forEach(function (v, i) {
+                fd.append("variants[" + i + "].id", v.id);
+                fd.append("variants[" + i + "].colorId", v.colorId);
+                fd.append("variants[" + i + "].sizeId", v.sizeId);
+                fd.append("variants[" + i + "].quantity", v.quantity);
+            });
+            var newIndex = 0;
+            var main = "";
+            images.forEach(function (img, i) {
+                if (img.kind == "old") {
+                    fd.append("keepImageIds", img.id);
+                    if (i == mainIndex) main = "old:" + img.id;
+                } else {
+                    fd.append("newImages", img.file);
+                    if (i == mainIndex) main = "new:" + newIndex;
+                    newIndex++;
+                }
+            });
+            fd.append("mainImage", main);
+
+            var btn = document.getElementById("btnSave");
+            btn.disabled = true;
+            btn.innerText = "Đang lưu...";
+            errorBox.innerText = "";
+            try {
+                var res;
+                if (editingId == 0) {
+                    res = await fetch("/products/add", { method: "POST", body: fd });
+                } else {
+                    res = await fetch("/products/update/" + editingId, { method: "PUT", body: fd });
+                }
+                if (!checkLogin(res)) {
+                    return;
+                }
+                if (res.ok) {
+                    var data = await res.json();
+                    modal.hide();
+                    await loadData();
+                    if (data.message.indexOf("Lưu ý") >= 0) {
+                        alert(data.message);
+                    }
+                } else {
+                    errorBox.innerText = await res.text();
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Lưu";
+            }
+        }
+
+        async function remove(id) {
+            if (!confirm("Bạn có chắc muốn xóa sản phẩm này?")) {
+                return;
+            }
+            var res = await fetch("/products/delete/" + id, { method: "DELETE" });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (res.ok) {
+                loadData();
+            } else {
+                alert(await res.text());
+            }
+        }
+
+        async function restore(id) {
+            var res = await fetch("/products/restore/" + id, { method: "PUT" });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (res.ok) {
+                loadData();
+            } else {
+                alert(await res.text());
+            }
+        }
+
+        // bấm Enter ở ô tìm kiếm thì lọc luôn
+        document.getElementById("fKeyword").addEventListener("keydown", function (e) {
+            if (e.key == "Enter") {
+                loadData();
+            }
+        });
+
+        async function start() {
+            await loadOptions();
+            await loadData();
+        }
+        start();
+    </script>
+}

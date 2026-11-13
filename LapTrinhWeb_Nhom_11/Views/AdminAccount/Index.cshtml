@@ -1,0 +1,339 @@
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h3>Quản lý tài khoản</h3>
+    <button type="button" class="btn btn-primary" onclick="openAdd()">Tạo tài khoản</button>
+</div>
+
+<!-- bộ lọc -->
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-5">
+                <input type="text" id="fKeyword" class="form-control" placeholder="Tìm theo tên đăng nhập, họ tên, email, số điện thoại" />
+            </div>
+            <div class="col-md-2">
+                <select id="fRole" class="form-select">
+                    <option value="">Tất cả vai trò</option>
+                    <option value="ADMIN">Quản trị viên</option>
+                    <option value="CUSTOMER">Khách hàng</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="fActive" class="form-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="true">Đang hoạt động</option>
+                    <option value="false">Đã khóa</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-primary me-1" onclick="loadData()">Lọc</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetFilter()">Đặt lại</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered align-middle">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Tên đăng nhập</th>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th>Số điện thoại</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+</table>
+
+<!-- form tạo / sửa -->
+<div class="modal fade" id="accountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Tạo tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tên đăng nhập</label>
+                    <input type="text" id="username" class="form-control" maxlength="50" autocomplete="off" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" id="passwordLabel">Mật khẩu</label>
+                    <input type="password" id="password" class="form-control" maxlength="50" autocomplete="new-password" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Họ tên</label>
+                    <input type="text" id="fullName" class="form-control" maxlength="100" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="text" id="email" class="form-control" maxlength="100" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" id="phone" class="form-control" maxlength="20" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Vai trò</label>
+                    <select id="role" class="form-select">
+                        <option value="CUSTOMER">Khách hàng</option>
+                        <option value="ADMIN">Quản trị viên (admin)</option>
+                    </select>
+                    <div id="roleNote" class="form-text text-danger"></div>
+                </div>
+                <div id="error" class="text-danger"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="btnSave" onclick="save()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var accounts = [];
+        var editingId = 0;
+        var currentId = @(Context.Session.GetInt32("AccountId") ?? 0); // id của admin đang đăng nhập
+        var modal = new bootstrap.Modal(document.getElementById("accountModal"));
+
+        // chống lỗi hiển thị khi dữ liệu có ký tự đặc biệt
+        function esc(text) {
+            return String(text ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // nếu hết phiên đăng nhập thì về trang login
+        function checkLogin(res) {
+            if (res.status == 401) {
+                window.location.href = "/login";
+                return false;
+            }
+            return true;
+        }
+
+        // ===== danh sách =====
+        async function loadData() {
+            var params = new URLSearchParams();
+            var keyword = document.getElementById("fKeyword").value.trim();
+            var role = document.getElementById("fRole").value;
+            var active = document.getElementById("fActive").value;
+            if (keyword != "") params.append("keyword", keyword);
+            if (role != "") params.append("role", role);
+            if (active != "") params.append("active", active);
+
+            var res = await fetch("/accounts/admin?" + params.toString());
+            if (!checkLogin(res)) {
+                return;
+            }
+            accounts = await res.json();
+            render();
+        }
+
+        function resetFilter() {
+            document.getElementById("fKeyword").value = "";
+            document.getElementById("fRole").value = "";
+            document.getElementById("fActive").value = "";
+            loadData();
+        }
+
+        function render() {
+            var html = "";
+            if (accounts.length == 0) {
+                html = "<tr><td colspan='8' class='text-center text-muted'>Không có tài khoản nào</td></tr>";
+            }
+            accounts.forEach(function (a) {
+                var isSelf = a.id == currentId;
+                var roleHtml = a.role == "ADMIN"
+                    ? "<span class='badge bg-danger'>Quản trị viên</span>"
+                    : "<span class='badge bg-secondary'>Khách hàng</span>";
+                var statusHtml = a.isActive
+                    ? "<span class='badge bg-success'>Đang hoạt động</span>"
+                    : "<span class='badge bg-dark'>Đã khóa</span>";
+
+                html += "<tr" + (a.isActive ? "" : " class='text-muted'") + ">";
+                html += "<td>" + a.id + "</td>";
+                html += "<td>" + esc(a.username) + (isSelf ? " <span class='badge bg-info text-dark'>Bạn</span>" : "") + "</td>";
+                html += "<td>" + esc(a.fullName) + "</td>";
+                html += "<td>" + esc(a.email) + "</td>";
+                html += "<td>" + esc(a.phone) + "</td>";
+                html += "<td>" + roleHtml + "</td>";
+                html += "<td>" + statusHtml + "</td>";
+                html += "<td>";
+                html += "<button class='btn btn-sm btn-warning me-1' onclick='openEdit(" + a.id + ")'>Sửa</button>";
+                if (a.isActive) {
+                    // không cho tự khóa chính mình
+                    html += "<button class='btn btn-sm btn-danger' onclick='lockAccount(" + a.id + ")'" + (isSelf ? " disabled" : "") + ">Khóa</button>";
+                } else {
+                    html += "<button class='btn btn-sm btn-success' onclick='unlockAccount(" + a.id + ")'>Mở khóa</button>";
+                }
+                html += "</td></tr>";
+            });
+            document.getElementById("tbody").innerHTML = html;
+        }
+
+        // ===== form =====
+        function openAdd() {
+            editingId = 0;
+            document.getElementById("modalTitle").innerText = "Tạo tài khoản";
+            document.getElementById("username").value = "";
+            document.getElementById("username").disabled = false;
+            document.getElementById("password").value = "";
+            document.getElementById("passwordLabel").innerText = "Mật khẩu (6-50 ký tự)";
+            document.getElementById("fullName").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("role").value = "CUSTOMER";
+            document.getElementById("role").disabled = false;
+            document.getElementById("roleNote").innerText = "";
+            document.getElementById("error").innerText = "";
+            modal.show();
+        }
+
+        function openEdit(id) {
+            var a = accounts.find(function (x) { return x.id == id; });
+            editingId = id;
+            document.getElementById("modalTitle").innerText = "Sửa tài khoản";
+            document.getElementById("username").value = a.username;
+            document.getElementById("username").disabled = true; // không đổi tên đăng nhập
+            document.getElementById("password").value = "";
+            document.getElementById("passwordLabel").innerText = "Mật khẩu mới (để trống nếu không đổi)";
+            document.getElementById("fullName").value = a.fullName ?? "";
+            document.getElementById("email").value = a.email ?? "";
+            document.getElementById("phone").value = a.phone ?? "";
+            document.getElementById("role").value = a.role;
+            // admin không được tự đổi vai trò của chính mình
+            var isSelf = a.id == currentId;
+            document.getElementById("role").disabled = isSelf;
+            document.getElementById("roleNote").innerText = isSelf ? "Bạn không thể tự đổi vai trò của chính mình" : "";
+            document.getElementById("error").innerText = "";
+            modal.show();
+        }
+
+        async function save() {
+            var errorBox = document.getElementById("error");
+            var username = document.getElementById("username").value.trim();
+            var password = document.getElementById("password").value;
+            var fullName = document.getElementById("fullName").value.trim();
+            var email = document.getElementById("email").value.trim();
+            var phone = document.getElementById("phone").value.trim();
+            var role = document.getElementById("role").value;
+
+            if (editingId == 0) {
+                if (!/^[a-zA-Z0-9_.]{3,50}$/.test(username)) {
+                    errorBox.innerText = "Tên đăng nhập gồm 3-50 ký tự: chữ không dấu, số, dấu chấm hoặc gạch dưới";
+                    return;
+                }
+                if (password == "") {
+                    errorBox.innerText = "Mật khẩu không được để trống";
+                    return;
+                }
+            }
+            if (password != "" && (password.length < 6 || password.length > 50)) {
+                errorBox.innerText = "Mật khẩu từ 6 đến 50 ký tự";
+                return;
+            }
+            if (fullName == "") {
+                errorBox.innerText = "Họ tên không được để trống";
+                return;
+            }
+            // trong file .cshtml phải viết @@ để ra 1 ký tự @@
+            if (email != "" && !/^[^@@\s]+@@[^@@\s]+\.[^@@\s]+$/.test(email)) {
+                errorBox.innerText = "Email không hợp lệ";
+                return;
+            }
+            if (phone != "" && !/^\+?[0-9]{9,15}$/.test(phone)) {
+                errorBox.innerText = "Số điện thoại không hợp lệ";
+                return;
+            }
+            if (role == "ADMIN" && editingId == 0) {
+                if (!confirm("Bạn đang tạo tài khoản QUẢN TRỊ VIÊN, người này sẽ có toàn quyền quản trị. Tiếp tục?")) {
+                    return;
+                }
+            }
+
+            var body = { username: username, password: password, fullName: fullName, email: email, phone: phone, role: role };
+            var btn = document.getElementById("btnSave");
+            btn.disabled = true;
+            errorBox.innerText = "";
+            try {
+                var res;
+                if (editingId == 0) {
+                    res = await fetch("/accounts/add", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(body)
+                    });
+                } else {
+                    res = await fetch("/accounts/update/" + editingId, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(body)
+                    });
+                }
+                if (!checkLogin(res)) {
+                    return;
+                }
+                if (res.ok) {
+                    modal.hide();
+                    loadData();
+                } else {
+                    errorBox.innerText = await res.text();
+                }
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function lockAccount(id) {
+            var a = accounts.find(function (x) { return x.id == id; });
+            if (!confirm("Khóa tài khoản " + a.username + "? Người này sẽ không đăng nhập được nữa.")) {
+                return;
+            }
+            var res = await fetch("/accounts/lock/" + id, { method: "PUT" });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (res.ok) {
+                loadData();
+            } else {
+                alert(await res.text());
+            }
+        }
+
+        async function unlockAccount(id) {
+            var res = await fetch("/accounts/unlock/" + id, { method: "PUT" });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (res.ok) {
+                loadData();
+            } else {
+                alert(await res.text());
+            }
+        }
+
+        // bấm Enter ở ô tìm kiếm thì lọc luôn
+        document.getElementById("fKeyword").addEventListener("keydown", function (e) {
+            if (e.key == "Enter") {
+                loadData();
+            }
+        });
+
+        loadData();
+    </script>
+}

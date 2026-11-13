@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Kết quả thanh toán";
+    bool success = ViewBag.Success == true;
+    string? orderCode = ViewBag.OrderCode;
+}
+
+<div class="text-center mt-5">
+    <h2 class="@(success ? "text-success" : "text-danger")">
+        @(success ? "Thanh toán thành công" : "Thanh toán không thành công")
+    </h2>
+    <p class="mt-3">@ViewBag.Message</p>
+    @if (!string.IsNullOrEmpty(orderCode))
+    {
+        <p>Mã đơn hàng: <b>@orderCode</b></p>
+    }
+    <a href="/" class="btn btn-primary mt-3">Về trang chủ</a>
+</div>
