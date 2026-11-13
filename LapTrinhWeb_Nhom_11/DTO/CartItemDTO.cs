@@ -1,6 +1,5 @@
 namespace LapTrinhWeb_Nhom_11.DTO
 {
-    // Một dòng trong giỏ hàng
     public class CartItemDTO
     {
         public int Id { get; set; }
@@ -23,10 +22,8 @@ namespace LapTrinhWeb_Nhom_11.DTO
 
         public int Quantity { get; set; }
 
-        // số lượng còn trong kho
         public int Stock { get; set; }
 
-        // false nếu sản phẩm đã ngừng bán / bị xóa hoặc kho không đủ số lượng đang có trong giỏ
         public bool IsAvailable { get; set; }
     }
 }

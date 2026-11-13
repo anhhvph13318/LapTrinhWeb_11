@@ -26,7 +26,7 @@
     <tbody id="tbody"></tbody>
 </table>
 
-<!-- form thêm / sửa -->
+
 <div class="modal fade" id="categoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -59,14 +59,12 @@
         var editingId = 0;
         var modal = new bootstrap.Modal(document.getElementById("categoryModal"));
 
-        // chống lỗi hiển thị khi tên có ký tự đặc biệt
         function esc(text) {
             var div = document.createElement("div");
             div.textContent = text ?? "";
             return div.innerHTML;
         }
 
-        // nếu hết phiên đăng nhập thì về trang login
         function checkLogin(res) {
             if (res.status == 401) {
                 window.location.href = "/login";
@@ -139,7 +137,6 @@
                     body: JSON.stringify({ name: name, description: description })
                 });
             } else {
-                // giữ nguyên trạng thái xóa của danh mục đang sửa
                 var c = categories.find(function (x) { return x.id == editingId; });
                 res = await fetch("/Categories/update/" + editingId, {
                     method: "PUT",

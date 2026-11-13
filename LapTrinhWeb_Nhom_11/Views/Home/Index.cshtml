@@ -41,7 +41,7 @@
                 padding: 0 20px;
             }
 
-            /* HEADER */
+            
             .header {
                 background: white;
                 padding: 18px 0;
@@ -71,7 +71,7 @@
                 color: #6255D9;
             }
 
-            /* BANNER */
+            
             .banner {
                 margin: 25px auto;
                 min-height: 350px;
@@ -116,7 +116,7 @@
                 padding-right: 40px;
             }
 
-            /* SERVICE */
+            
             .service-box {
                 background: #C8F7D5;
                 border-radius: 24px;
@@ -155,7 +155,7 @@
                 color: #777;
             }
 
-            /* PRODUCTS */
+            
             .section-title {
                 margin-top: 35px;
                 font-size: 32px;
@@ -255,7 +255,7 @@
                 grid-column: 1 / -1;
             }
 
-            /* PROMOTION */
+            
             .promotion {
                 margin: 35px 0;
                 background: #FF5C8A;
@@ -325,7 +325,7 @@
                 cursor: pointer;
             }
 
-            /* FOOTER */
+            
             .footer {
                 background: #25254B;
                 color: white;
@@ -412,7 +412,7 @@
 
 <body>
 
-    <!-- HEADER -->
+    
     <header class="header">
         <div class="container header-content">
             <a href="/" class="logo">
@@ -434,7 +434,7 @@
 
     <main class="container">
 
-        <!-- BANNER -->
+        
         <section class="banner">
             <div class="banner-content">
                 <h1>Khám phá phong cách của bạn</h1>
@@ -453,7 +453,7 @@
             </div>
         </section>
 
-        <!-- SERVICES -->
+        
         <section id="services" class="service-box">
 
             <div class="service-item">
@@ -498,7 +498,7 @@
 
         </section>
 
-        <!-- PRODUCTS -->
+        
         <section id="products">
 
             <h2 class="section-title">Sản phẩm mới</h2>
@@ -516,7 +516,7 @@
 
         </section>
 
-        <!-- PROMOTION -->
+        
         <section class="promotion">
 
             <div>
@@ -541,7 +541,7 @@
 
     </main>
 
-    <!-- FOOTER -->
+    
     <footer id="footer" class="footer">
         <h3>BUBU Shoes</h3>
         <p>Hệ thống cửa hàng giày thời trang</p>
@@ -551,7 +551,6 @@
     <script>
             const API_URL = "/products/GetAll";
 
-            // Lấy danh sách sản phẩm từ API C#
             async function getProducts() {
                 const container = document.getElementById("productList");
 
@@ -564,10 +563,8 @@
 
                     const products = await response.json();
 
-                    // Lọc sản phẩm chưa bị xóa
                     const activeProducts = products.filter(p => !p.isDeleted);
 
-                    // Lấy 10 sản phẩm cuối cùng
                     const latestProducts = activeProducts.slice(-10).reverse();
 
                     renderProducts(latestProducts);
@@ -583,7 +580,6 @@
                     `;
                 }
             }
-            // Lấy số lượng sản phẩm trong giỏ hàng
             async function updateCartBadge() {
                 const badge = document.getElementById("cartBadge");
 
@@ -607,7 +603,6 @@
                     badge.textContent = "0";
                 }
             }
-            // Hiển thị sản phẩm
             function renderProducts(products) {
                 const container = document.getElementById("productList");
 
@@ -681,7 +676,6 @@
                 }).join("");
             }
 
-            // Chống đưa dữ liệu dạng HTML vào nội dung hiển thị
             function escapeHtml(value) {
                 return String(value ?? "").replace(/[&<>"']/g, char => ({
                     "&": "&amp;",
@@ -692,7 +686,6 @@
                 })[char]);
             }
 
-            // Yêu thích: lưu trạng thái trên trình duyệt
             function toggleFavorite(button, productId) {
                 let favorites = JSON.parse(
                     localStorage.getItem("favoriteProducts") || "[]"
@@ -734,7 +727,6 @@
                 });
             }
 
-            // Đăng ký email (chưa kết nối API)
             function registerEmail(event) {
                 event.preventDefault();
 
@@ -743,7 +735,6 @@
                 alert("Email của bạn: " + email);
             }
 
-            // Khởi chạy
             getProducts();
             updateCartBadge();
     </script>

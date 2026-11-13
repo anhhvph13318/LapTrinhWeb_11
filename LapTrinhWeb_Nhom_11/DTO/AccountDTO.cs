@@ -1,6 +1,5 @@
 ﻿namespace LapTrinhWeb_Nhom_11.DTO
 {
-    // Thông tin tài khoản trả về cho trang admin (không có mật khẩu)
     public class AccountDTO
     {
         public int Id { get; set; }

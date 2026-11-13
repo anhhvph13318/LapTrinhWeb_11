@@ -23,7 +23,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return ToDTOs(appDbContext, product);
         }
 
-        // Danh sách sản phẩm cho trang admin, có bộ lọc
         [AdminOnly]
         [HttpGet("admin")]
         public List<ProductDTO> GetAdmin(string? keyword, int? categoryId, int? status, bool? deleted, decimal? minPrice, decimal? maxPrice)
@@ -59,7 +58,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return ToDTOs(appDbContext, product);
         }
 
-        // Danh sách danh mục, màu, size để đổ vào các ô chọn trong form
         [AdminOnly]
         [HttpGet("options")]
         public IActionResult Options()
@@ -71,7 +69,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok(new { categories = categories, colors = colors, sizes = sizes });
         }
 
-        // Thêm sản phẩm kèm biến thể và ảnh trong 1 lần
         [AdminOnly]
         [RequestSizeLimit(50000000)]
         [RequestFormLimits(MultipartBodyLengthLimit = 50000000)]
@@ -106,7 +103,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 appDbContext.Products.Add(product);
                 appDbContext.SaveChanges();
 
-                // lưu ảnh (xong thì gán ảnh chính vào product.ImageUrl)
                 SaveImages(product, form);
                 appDbContext.SaveChanges();
                 return Ok(new { message = "Thêm thành công", id = product.Id });
@@ -117,7 +113,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
         }
 
-        // Sửa sản phẩm kèm biến thể và ảnh trong 1 lần
         [AdminOnly]
         [RequestSizeLimit(50000000)]
         [RequestFormLimits(MultipartBodyLengthLimit = 50000000)]
@@ -156,7 +151,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
         }
 
-        // Xóa mềm: chỉ đổi IsDeleted = true, không xóa trong database
         [AdminOnly]
         [HttpDelete("delete/{id}")]
         public IActionResult Delete(int id)
@@ -172,7 +166,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Xóa thành công");
         }
 
-        // Khôi phục sản phẩm đã xóa mềm
         [AdminOnly]
         [HttpPut("restore/{id}")]
         public IActionResult Restore(int id)
@@ -188,9 +181,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Khôi phục thành công");
         }
 
-        // ================== các hàm dùng chung ==================
 
-        // Đổi danh sách Product sang ProductDTO (kèm biến thể và thông tin ảnh)
         private List<ProductDTO> ToDTOs(AppDbContext appDbContext, List<Product> products)
         {
             List<ProductDTO> productDTOs = new List<ProductDTO>();
@@ -222,7 +213,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                     productDTO.ProductDetails.Add(productDetailDTO);
                 }
 
-                // chỉ lấy thông tin ảnh, không lấy cột Data cho nhẹ
                 var images = appDbContext.Images.Where(c => c.ProductId == p.Id)
                     .Select(c => new { c.Id, c.ProductId, c.FileName, c.ContentType, c.IsMain, c.SortOrder, c.Version, c.CreatedAt })
                     .OrderBy(c => c.SortOrder)
@@ -246,8 +236,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return productDTOs;
         }
 
-        // Kiểm tra dữ liệu form, có lỗi thì trả về câu báo lỗi, không lỗi trả về null
-        // id = 0 là thêm mới, id > 0 là sửa (để kiểm tra trùng mã không tính chính nó)
         private string? CheckForm(AppDbContext appDbContext, ProductFormDTO form, int id)
         {
             if (string.IsNullOrWhiteSpace(form.Code))
@@ -282,7 +270,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 return "Mã sản phẩm đã tồn tại";
             }
 
-            // biến thể
             if (form.Variants.Count == 0)
             {
                 return "Sản phẩm phải có ít nhất 1 biến thể (màu, size, số lượng)";
@@ -306,7 +293,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 return "Có biến thể bị trùng cả màu và size";
             }
 
-            // ảnh mới
             string[] allowed = { "image/jpeg", "image/png", "image/gif", "image/webp" };
             foreach (var file in form.NewImages)
             {
@@ -326,8 +312,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return null;
         }
 
-        // Cập nhật biến thể khi sửa: Id > 0 là sửa, Id = 0 là thêm mới, biến thể không còn trong form là bị xóa
-        // Biến thể đã có trong đơn hàng thì không xóa được (sẽ lỗi khóa ngoại) nên chỉ đặt số lượng về 0
         private string SaveVariants(AppDbContext appDbContext, Product product, List<ProductDetailDTO> variants)
         {
             var oldDetails = appDbContext.ProductDetails.Where(c => c.ProductId == product.Id).ToList();
@@ -383,15 +367,10 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return "";
         }
 
-        // Lưu ảnh: xóa ảnh cũ không giữ, thêm ảnh mới, chọn ảnh chính rồi gán vào product.ImageUrl
-        // Mỗi thao tác dùng AppDbContext riêng vì trong AppDbContext, Product và Image đang cấu hình quan hệ 1-1,
-        // nếu thêm nhiều ảnh trong cùng 1 context thì EF có thể xóa nhầm ảnh trước đó
         private void SaveImages(Product product, ProductFormDTO form)
         {
             AppDbContext db = new AppDbContext();
-            // xóa các ảnh không còn giữ lại (khi thêm mới thì chưa có ảnh nào)
             db.Images.Where(c => c.ProductId == product.Id && !form.KeepImageIds.Contains(c.Id)).ExecuteDelete();
-            // bỏ trạng thái ảnh chính của các ảnh còn lại, chọn lại ở dưới
             db.Images.Where(c => c.ProductId == product.Id).ExecuteUpdate(s => s.SetProperty(c => c.IsMain, false));
 
             int sort = db.Images.Where(c => c.ProductId == product.Id).Max(c => (int?)c.SortOrder) ?? 0;
@@ -416,7 +395,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 newImageIds.Add(image.Id);
             }
 
-            // chọn ảnh chính
             int mainId = 0;
             string main = form.MainImage ?? "";
             if (main.StartsWith("old:"))
@@ -424,7 +402,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 int oldId;
                 if (int.TryParse(main.Substring(4), out oldId))
                 {
-                    // chỉ nhận nếu ảnh này thuộc sản phẩm
                     mainId = db.Images.Where(c => c.Id == oldId && c.ProductId == product.Id).Select(c => c.Id).FirstOrDefault();
                 }
             }
@@ -438,7 +415,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
             if (mainId == 0)
             {
-                // không chọn thì lấy ảnh đầu tiên
                 mainId = db.Images.Where(c => c.ProductId == product.Id).OrderBy(c => c.SortOrder).Select(c => c.Id).FirstOrDefault();
             }
             if (mainId != 0)
@@ -451,7 +427,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 product.ImageUrl = null;
             }
         }
-        // Hiển thị trang chi tiết sản phẩm
         [HttpGet("detail/{id}")]
         public IActionResult Detail(int id)
         {

@@ -31,12 +31,13 @@ namespace LapTrinhWeb_Nhom_11.Helpers
             {
                 var request = context.HttpContext.Request;
 
-                bool isAjax = request.Headers["X-Requested-With"]
-                    == "XMLHttpRequest";
+                bool isApi = request.Path.StartsWithSegments("/cart");
 
-                if (isAjax)
+                if (isApi)
                 {
-                    context.Result = new UnauthorizedResult();
+                    context.Result = new UnauthorizedObjectResult(
+                        new { message = "Phiên đăng nhập đã hết hạn" }
+                    );
                 }
                 else
                 {

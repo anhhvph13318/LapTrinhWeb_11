@@ -437,14 +437,11 @@
                     if (!currentProduct)
                         throw new Error("Không tìm thấy sản phẩm");
 
-                    // Lấy danh sách phiên bản sản phẩm
                     const productVariants = currentProduct.productDetails || [];
 
-                    // Lấy danh sách size và màu từ API ProductDetail
                     const sizeNames = detail.sizes || [];
                     const colorNames = detail.colors || [];
 
-                    // Ghép ID với tên size và màu
                     variants = productVariants.map(v => {
                         const size = sizeNames.find(s =>
                             Number(s.id) === Number(v.sizeId)
@@ -461,7 +458,6 @@
                         };
                     });
 
-                    // Sắp xếp ảnh
                     images = [...(currentProduct.images || [])].sort((a, b) => {
                         if (a.isMain !== b.isMain)
                             return a.isMain ? -1 : 1;
@@ -690,7 +686,6 @@
             function refreshOptions() {
                 const content = document.getElementById("detailContent");
 
-                // Cập nhật phần lựa chọn và thông tin tồn kho.
                 renderDetail();
             }
 

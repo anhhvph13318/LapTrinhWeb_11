@@ -8,7 +8,7 @@
     <button type="button" class="btn btn-primary" onclick="openAdd()">Thêm sản phẩm</button>
 </div>
 
-<!-- bộ lọc -->
+
 <div class="card mb-3">
     <div class="card-body">
         <div class="row g-2 mb-2">
@@ -67,7 +67,7 @@
     <tbody id="tbody"></tbody>
 </table>
 
-<!-- form thêm / sửa -->
+
 <div class="modal fade" id="productModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -106,7 +106,7 @@
                     </div>
                 </div>
 
-                <!-- biến thể -->
+                
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between">
                         <b>Biến thể (màu, size, số lượng)</b>
@@ -127,7 +127,7 @@
                     </div>
                 </div>
 
-                <!-- ảnh -->
+                
                 <div class="card mb-3">
                     <div class="card-header"><b>Ảnh sản phẩm</b> <span class="text-muted">(jpg, png, gif, webp, tối đa 5MB mỗi ảnh)</span></div>
                     <div class="card-body">
@@ -156,7 +156,6 @@
         var mainIndex = 0;      // vị trí ảnh chính trong mảng images
         var modal = new bootstrap.Modal(document.getElementById("productModal"));
 
-        // chống lỗi hiển thị khi dữ liệu có ký tự đặc biệt
         function esc(text) {
             return String(text ?? "")
                 .replace(/&/g, "&amp;")
@@ -166,7 +165,6 @@
                 .replace(/'/g, "&#39;");
         }
 
-        // nếu hết phiên đăng nhập thì về trang login
         function checkLogin(res) {
             if (res.status == 401) {
                 window.location.href = "/login";
@@ -180,7 +178,6 @@
             return item ? item.name : "?";
         }
 
-        // tạo các thẻ <option>; chỉ hiện mục đang dùng hoặc mục còn hoạt động
         function optionsHtml(list, selectedId, isCategory) {
             var html = "<option value=''>-- Chọn --</option>";
             list.forEach(function (x) {
@@ -192,14 +189,12 @@
             return html;
         }
 
-        // ===== tải dữ liệu =====
         async function loadOptions() {
             var res = await fetch("/products/options");
             if (!checkLogin(res)) {
                 return;
             }
             options = await res.json();
-            // ô lọc danh mục
             var html = "<option value=''>Tất cả danh mục</option>";
             options.categories.forEach(function (c) {
                 html += "<option value='" + c.id + "'>" + esc(c.name) + (c.isDeleted ? " (đã xóa)" : "") + "</option>";
@@ -240,15 +235,12 @@
             loadData();
         }
 
-        // ===== bảng danh sách =====
         function render() {
             var html = "";
             if (products.length == 0) {
                 html = "<tr><td colspan='9' class='text-center text-muted'>Không có sản phẩm nào</td></tr>";
             }
             products.forEach(function (p) {
-                // ảnh thật nằm ở bảng Image (p.images): ưu tiên ảnh chính, không có thì lấy ảnh đầu tiên,
-                // cuối cùng mới dùng cột ImageUrl của sản phẩm (có thể bị trống hoặc cũ với dữ liệu nhập tay)
                 var mainImage = p.images.find(function (img) { return img.isMain; }) ?? p.images[0];
                 var thumbUrl = mainImage ? mainImage.imageUrl : p.imageUrl;
                 var thumb = thumbUrl
@@ -290,7 +282,6 @@
             document.getElementById("tbody").innerHTML = html;
         }
 
-        // ===== biến thể trong form =====
         function renderVariants() {
             var html = "";
             variantRows.forEach(function (v, i) {
@@ -307,7 +298,6 @@
             document.getElementById("variantBody").innerHTML = html;
         }
 
-        // đọc lại giá trị đang nhập trong bảng biến thể vào mảng variantRows
         function syncVariants() {
             var rows = document.querySelectorAll("#variantBody tr[data-id]");
             variantRows = [];
@@ -333,7 +323,6 @@
             renderVariants();
         }
 
-        // ===== ảnh trong form =====
         function renderImages() {
             var html = "";
             images.forEach(function (img, i) {
@@ -388,7 +377,6 @@
             renderImages();
         });
 
-        // ===== mở form =====
         function fillCategory(selectedId) {
             document.getElementById("categoryId").innerHTML = optionsHtml(options.categories, selectedId, true);
         }
@@ -437,7 +425,6 @@
             modal.show();
         }
 
-        // ===== lưu =====
         async function save() {
             syncVariants();
             var errorBox = document.getElementById("error");
@@ -555,7 +542,6 @@
             }
         }
 
-        // bấm Enter ở ô tìm kiếm thì lọc luôn
         document.getElementById("fKeyword").addEventListener("keydown", function (e) {
             if (e.key == "Enter") {
                 loadData();

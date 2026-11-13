@@ -9,7 +9,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
     public class AccountController : Controller
     {
 
-        // Trang đăng nhập
         [HttpGet("/login")]
         public IActionResult Login(string? returnUrl)
         {
@@ -20,7 +19,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return View();
         }
 
-        // Đăng nhập
         [HttpPost("/login")]
         public IActionResult DoLogin(
             [FromBody] LoginDTO dto,
@@ -52,7 +50,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 return BadRequest("Tài khoản đã bị khóa");
             }
 
-            // Lưu thông tin đăng nhập vào Session
             HttpContext.Session.SetInt32("AccountId", account.Id);
             HttpContext.Session.SetString("Role", account.Role);
             HttpContext.Session.SetString(
@@ -68,8 +65,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
             else if (account.Role == "CUSTOMER")
             {
-                // Nếu có returnUrl hợp lệ thì quay lại trang trước đó
-                // Nếu không có thì chuyển về trang chủ /home
                 redirect = Url.IsLocalUrl(returnUrl)
                     ? returnUrl!
                     : "/home";
@@ -83,7 +78,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         }
 
 
-        // Đăng xuất
         [HttpGet("/logout")]
         public IActionResult Logout()
         {
@@ -91,9 +85,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Redirect("/login");
         }
 
-        // ================== quản lý tài khoản (chỉ admin) ==================
 
-        // Danh sách tài khoản cho trang admin, có bộ lọc
         [AdminOnly]
         [HttpGet("/accounts/admin")]
         public List<AccountDTO> GetAdmin(string? keyword, string? role, bool? active)
@@ -131,7 +123,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return accounts;
         }
 
-        // Tạo tài khoản (chọn role ADMIN hoặc CUSTOMER)
         [AdminOnly]
         [HttpPost("/accounts/add")]
         public IActionResult Add([FromBody] AccountFormDTO form)
@@ -155,7 +146,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Tạo tài khoản thành công");
         }
 
-        // Sửa thông tin tài khoản, nhập mật khẩu mới thì đổi mật khẩu
         [AdminOnly]
         [HttpPut("/accounts/update/{id}")]
         public IActionResult Update(int id, [FromBody] AccountFormDTO form)
@@ -171,7 +161,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             {
                 return BadRequest(error);
             }
-            // không cho admin tự đổi vai trò của mình (tránh tự mất quyền admin)
             if (id == HttpContext.Session.GetInt32("AccountId") && form.Role != account.Role)
             {
                 return BadRequest("Bạn không thể tự đổi vai trò của chính mình");
@@ -188,7 +177,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Sửa thành công");
         }
 
-        // Khóa tài khoản (IsActive = false), tài khoản bị khóa không đăng nhập được
         [AdminOnly]
         [HttpPut("/accounts/lock/{id}")]
         public IActionResult Lock(int id)
@@ -208,7 +196,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Đã khóa tài khoản");
         }
 
-        // Mở khóa tài khoản
         [AdminOnly]
         [HttpPut("/accounts/unlock/{id}")]
         public IActionResult Unlock(int id)
@@ -224,9 +211,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Đã mở khóa tài khoản");
         }
 
-        // ================== các hàm dùng chung ==================
 
-        // chuỗi rỗng thì đổi thành null, còn lại cắt khoảng trắng 2 đầu
         private string? Clean(string? text)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -236,8 +221,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return text.Trim();
         }
 
-        // Kiểm tra dữ liệu form, có lỗi thì trả về câu báo lỗi, không lỗi trả về null
-        // id = 0 là tạo mới, id > 0 là sửa
         private string? CheckForm(AppDbContext appDbContext, AccountFormDTO form, int id)
         {
             if (id == 0)

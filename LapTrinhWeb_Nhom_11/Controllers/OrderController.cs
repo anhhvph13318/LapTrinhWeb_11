@@ -7,9 +7,6 @@ using System.Text.RegularExpressions;
 
 namespace LapTrinhWeb_Nhom_11.Controllers
 {
-    // Trạng thái đơn hàng (cột Status): 0 Chờ xác nhận, 1 Đã xác nhận, 2 Đang giao, 3 Hoàn thành, 4 Hủy
-    // Phương thức thanh toán (PaymentMethod): 0 COD, 1 VNPay
-    // Trạng thái thanh toán (PaymentStatus): 0 Chưa thanh toán, 1 Đã thanh toán
     [Route("/orders")]
     public class OrderController : Controller
     {
@@ -20,9 +17,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             _config = config;
         }
 
-        // ================== dành cho khách hàng ==================
 
-        // Tạo đơn từ giỏ hàng: kiểm tra kho, trừ số lượng, COD thì xong luôn, VNPay thì trả về link thanh toán
         [LoginRequired]
         [HttpPost("create")]
         public IActionResult Create([FromBody] CheckoutDTO dto)
@@ -41,7 +36,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             OrderHelper.ReleaseExpired(); // trả lại kho các đơn VNPay quá hạn trước khi kiểm tra tồn kho
 
             AppDbContext appDbContext = new AppDbContext();
-            // transaction: trừ kho và tạo đơn cùng thành công, có lỗi giữa chừng thì trả lại hết
             using var tran = appDbContext.Database.BeginTransaction();
             try
             {
@@ -81,8 +75,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                         return BadRequest(productName + " không còn được bán, vui lòng xóa khỏi giỏ hàng");
                     }
 
-                    // trừ kho bằng 1 câu UPDATE có điều kiện (Quantity >= số lượng mua)
-                    // nên 2 người cùng mua món cuối cùng thì chỉ 1 người trừ được, không bị âm kho
                     int detailId = detail.Id;
                     int quantity = item.Quantity;
                     int affected = appDbContext.ProductDetails
@@ -93,7 +85,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                         return BadRequest(detail.Product.Name + " (" + detail.Size.Name + " / " + detail.Color.Name + ") không đủ số lượng trong kho");
                     }
 
-                    // giá lấy ở thời điểm đặt hàng và lưu vào đơn, sau này đổi giá sản phẩm cũng không ảnh hưởng đơn cũ
                     OrderDetail orderDetail = new OrderDetail();
                     orderDetail.ProductDetailId = detailId;
                     orderDetail.Quantity = quantity;
@@ -115,7 +106,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 order.AccountId = accountId;
                 appDbContext.Orders.Add(order);
 
-                // COD thì bỏ khỏi giỏ ngay; VNPay thì chỉ bỏ khi thanh toán thành công (để thanh toán lỗi vẫn còn giỏ để đặt lại)
                 if (dto.PaymentMethod == 0)
                 {
                     appDbContext.CartItems.RemoveRange(cartItems);
@@ -150,7 +140,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
         }
 
-        // Danh sách đơn của tôi
         [LoginRequired]
         [HttpGet("my")]
         public List<OrderDTO> GetMy()
@@ -162,7 +151,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return ToDTOs(query);
         }
 
-        // Chi tiết 1 đơn của tôi
         [LoginRequired]
         [HttpGet("my/{id}")]
         public IActionResult GetMyDetail(int id)
@@ -177,7 +165,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok(BuildDetail(appDbContext, order));
         }
 
-        // Khách tự hủy đơn: chỉ hủy được khi đơn đang chờ xác nhận, hủy xong trả lại kho
         [LoginRequired]
         [HttpPut("cancel/{id}")]
         public IActionResult CancelMy(int id)
@@ -207,9 +194,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Đã hủy đơn hàng");
         }
 
-        // ================== dành cho admin ==================
 
-        // Danh sách hóa đơn cho trang admin, có bộ lọc
         [AdminOnly]
         [HttpGet("admin")]
         public List<OrderDTO> GetAdmin(string? keyword, int? status, DateTime? fromDate, DateTime? toDate)
@@ -233,14 +218,12 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
             if (toDate != null)
             {
-                // lấy đến hết ngày toDate
                 DateTime to = toDate.Value.Date.AddDays(1);
                 query = query.Where(c => c.CreatedAt < to);
             }
             return ToDTOs(query.OrderByDescending(c => c.CreatedAt));
         }
 
-        // Chi tiết 1 hóa đơn kèm các sản phẩm
         [AdminOnly]
         [HttpGet("admin/{id}")]
         public IActionResult GetDetail(int id)
@@ -254,7 +237,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok(BuildDetail(appDbContext, order));
         }
 
-        // Đổi trạng thái hóa đơn
         [AdminOnly]
         [HttpPut("status/{id}")]
         public IActionResult UpdateStatus(int id, [FromBody] OrderStatusDTO dto)
@@ -269,7 +251,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             {
                 return BadRequest("Không thể chuyển hóa đơn sang trạng thái này");
             }
-            // đơn VNPay chưa thanh toán thì chỉ được hủy, chưa được xác nhận hay giao
             if (order.PaymentMethod == 1 && order.PaymentStatus == 0 && dto.Status != 4)
             {
                 return BadRequest("Đơn VNPay chưa thanh toán nên chưa thể chuyển trạng thái");
@@ -293,7 +274,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
 
             order.Status = dto.Status;
-            // đơn COD hoàn thành tức là đã giao và thu tiền xong
             if (dto.Status == 3 && order.PaymentMethod == 0)
             {
                 order.PaymentStatus = 1;
@@ -302,9 +282,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Đã cập nhật trạng thái");
         }
 
-        // ================== các hàm dùng chung ==================
 
-        // Đổi danh sách Order sang OrderDTO (có tổng số lượng sản phẩm, chưa có chi tiết)
         private List<OrderDTO> ToDTOs(IQueryable<Order> query)
         {
             return query.Select(c => new OrderDTO
@@ -326,7 +304,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }).ToList();
         }
 
-        // Đổi 1 Order sang OrderDTO kèm các sản phẩm bên trong
         private OrderDTO BuildDetail(AppDbContext appDbContext, Order order)
         {
             OrderDTO orderDTO = new OrderDTO();
@@ -359,7 +336,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                     Price = d.Price
                 })
                 .ToList();
-            // ảnh lấy từ bảng Image (ưu tiên ảnh chính), có ảnh thì dùng thay cho cột ImageUrl của sản phẩm
             var imageUrls = ImageHelper.GetMainImageUrls(appDbContext, items.Select(d => d.ProductId).Distinct().ToList());
             foreach (var item in items)
             {
@@ -373,7 +349,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return orderDTO;
         }
 
-        // Kiểm tra thông tin giao hàng, có lỗi thì trả về câu báo lỗi, không lỗi trả về null
         private string? CheckCheckout(CheckoutDTO dto)
         {
             string name = (dto.CustomerName ?? "").Trim();
@@ -410,7 +385,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return null;
         }
 
-        // Tạo mã đơn dạng DH + ngày giờ + 3 số ngẫu nhiên, không để trùng
         private string NewOrderCode(AppDbContext appDbContext)
         {
             string code;
@@ -422,9 +396,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return code;
         }
 
-        // Chỉ được chuyển tiến từng bước hoặc hủy:
-        // Chờ xác nhận -> Đã xác nhận -> Đang giao -> Hoàn thành, và hủy được khi chưa hoàn thành
-        // Hoàn thành và Hủy là trạng thái cuối, không đổi được nữa
         private bool CanChange(int from, int to)
         {
             if (from == 0)

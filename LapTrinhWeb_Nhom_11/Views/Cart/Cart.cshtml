@@ -729,7 +729,7 @@
             <div>
                 <div id="itemList"></div>
 
-                <!-- Thông tin nhận hàng -->
+                
                 <div class="card">
                     <h3>Thông tin nhận hàng</h3>
                     <div class="grid2">
@@ -762,8 +762,6 @@
             const SHIPPING_FEE = 30000;
 
             let items = [];
-            let discountPercent = 0;
-            let appliedCode = "";
             let paymentMethod = 0;
             let submitting = false;
 
@@ -789,14 +787,12 @@
                 setTimeout(() => t.remove(), 3500);
             }
 
-            // Gọi API, 401 thì chuyển sang trang đăng nhập
             async function api(url, options = {}) {
                 const res = await fetch(url, {
                     headers: { "Content-Type": "application/json" },
                     ...options
                 });
                 if (res.status === 401) {
-                    // TODO: sửa đường dẫn trang đăng nhập của bạn nếu khác
                     location.href = "/login?returnUrl=" + encodeURIComponent(location.pathname);
                     throw new Error("login");
                 }
@@ -805,7 +801,6 @@
                 try { return JSON.parse(text); } catch { return text; }
             }
 
-            // ===================== GIỎ HÀNG =====================
             async function loadCart() {
                 try {
                     applyCart(await api("/cart/get"));
@@ -819,9 +814,18 @@
 
             async function mutate(url, method, body) {
                 try {
-                    applyCart(await api(url, { method, body: body ? JSON.stringify(body) : undefined }));
+                    await api(url, {
+                        method,
+                        body: body ? JSON.stringify(body) : undefined
+                    });
+
+                    const cartData = await api("/cart/get");
+                    applyCart(cartData);
+
                 } catch (e) {
-                    if (e.message !== "login") showToast(e.message, "error");
+                    if (e.message !== "login") {
+                        showToast(e.message, "error");
+                    }
                 }
             }
 
@@ -839,35 +843,11 @@
             function clearAll() {
                 if (!confirm("Xóa tất cả sản phẩm trong giỏ hàng?")) return;
 
-                removeVoucher();
                 mutate("/cart/clear", "DELETE");
             }
-
-            // ===================== TÍNH TIỀN =====================
             const subtotal = () => items.reduce((s, e) => s + e.price * e.quantity, 0);
             const shipping = sub => (sub === 0 || sub >= FREE_SHIP_FROM) ? 0 : SHIPPING_FEE;
-            const discount = sub => Math.floor(sub * discountPercent / 100);
 
-            function applyVoucher() {
-                const code = ($("voucherInput").value || "").trim().toUpperCase();
-                if (!code) return;
-                if (code === "BUBU10") {
-                    discountPercent = 10;
-                    appliedCode = code;
-                    showToast("Đã áp dụng mã " + code + " (-10%)");
-                    renderSummary();
-                } else {
-                    showToast("Mã giảm giá không hợp lệ", "error");
-                }
-            }
-
-            function removeVoucher() {
-                discountPercent = 0;
-                appliedCode = "";
-                renderSummary();
-            }
-
-            // ===================== HIỂN THỊ =====================
             function render() {
                 const count = items.reduce((s, e) => s + e.quantity, 0);
 
@@ -985,37 +965,41 @@
             }
             function renderSummary() {
                 if (items.length === 0) return;
+
                 const sub = subtotal();
                 const ship = shipping(sub);
-                const disc = discount(sub);
-                const total = sub + ship - disc;
+                const total = sub + ship;
 
                 $("summary").innerHTML = `
-                            <h3>Tóm tắt đơn hàng</h3>
+                    <h3>Tóm tắt đơn hàng</h3>
 
-                            ${appliedCode === "" ? `
-                                <div class="voucher">
-                                    <input id="voucherInput" placeholder="Mã giảm giá"
-                                           onkeydown="if(event.key==='Enter') applyVoucher()">
-                                    <button onclick="applyVoucher()">Áp dụng</button>
-                                </div>` : `
-                                <div class="voucher-ok">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <span>${escapeHtml(appliedCode)} · giảm ${discountPercent}%</span>
-                                    <button onclick="removeVoucher()"><i class="fa-solid fa-xmark"></i></button>
-                                </div>`}
+                    <div class="sum-row">
+                        <span>Tạm tính</span>
+                        <b>${money(sub)}</b>
+                    </div>
 
-                            <div class="sum-row"><span>Tạm tính</span><b>${money(sub)}</b></div>
-                            <div class="sum-row"><span>Phí vận chuyển</span>
-                                <b class="${ship === 0 ? "green" : ""}">${ship === 0 ? "Miễn phí" : money(ship)}</b></div>
-                            ${disc > 0 ? `<div class="sum-row"><span>Giảm giá</span><b class="pink">-${money(disc)}</b></div>` : ""}
-                            <hr>
-                            <div class="total"><span>Tổng cộng</span><b>${money(total)}</b></div>
+                    <div class="sum-row">
+                        <span>Phí vận chuyển</span>
+                        <b class="${ship === 0 ? "green" : ""}">
+                            ${ship === 0 ? "Miễn phí" : money(ship)}
+                        </b>
+                    </div>
 
-                            <button class="order-btn" id="orderBtn" onclick="checkout()" ${submitting ? "disabled" : ""}>
-                                <i class="fa-solid fa-lock"></i> ${submitting ? "Đang xử lý..." : "Đặt hàng"}
-                            </button>
-                            <a href="/" class="continue">Tiếp tục mua sắm</a>`;
+                    <hr>
+
+                    <div class="total">
+                        <span>Tổng cộng</span>
+                        <b>${money(total)}</b>
+                    </div>
+
+                    <button class="order-btn" id="orderBtn"
+                            onclick="checkout()" ${submitting ? "disabled" : ""}>
+                        <i class="fa-solid fa-lock"></i>
+                        ${submitting ? "Đang xử lý..." : "Đặt hàng"}
+                    </button>
+
+                    <a href="/" class="continue">Tiếp tục mua sắm</a>
+                `;
             }
 
             function selectPay(method) {
@@ -1028,7 +1012,6 @@
                 });
             }
 
-            // ===================== ĐẶT HÀNG =====================
             async function checkout() {
                 if (submitting || items.length === 0) return;
 
@@ -1059,7 +1042,6 @@
                         })
                     });
 
-                    // Thanh toán VNPay
                     if (paymentMethod === 1) {
                         if (!res.paymentUrl) {
                             throw new Error("Không tạo được liên kết thanh toán VNPay");
@@ -1069,8 +1051,6 @@
                         return;
                     }
 
-                    // Thanh toán COD
-                    removeVoucher();
                     await loadCart();
                     showSuccess(res);
                 } catch (e) {

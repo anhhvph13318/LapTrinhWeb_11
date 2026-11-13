@@ -8,18 +8,15 @@ namespace LapTrinhWeb_Nhom_11.Helpers
 {
     public class VnPayHelper
     {
-        // Thông tin kết nối VNPay
         private const string TMN_CODE = "KKGKUI93";
         private const string HASH_SECRET = "K3V28UR3A2RPUDVE20QGHCZJAZOTUL7Q";
 
-        // Kiểm tra cấu hình VNPay
         public static bool IsConfigured(IConfiguration config)
         {
             return !string.IsNullOrWhiteSpace(TMN_CODE)
                 && !string.IsNullOrWhiteSpace(HASH_SECRET);
         }
 
-        // Địa chỉ VNPay chuyển khách về sau khi thanh toán
         public static string GetReturnUrl(IConfiguration config, HttpRequest request)
         {
             string? returnUrl = config["VnPay:ReturnUrl"];
@@ -31,7 +28,6 @@ namespace LapTrinhWeb_Nhom_11.Helpers
                 + "/payment/vnpay-return";
         }
 
-        // Lấy IP của khách hàng
         public static string GetIp(HttpContext context)
         {
             IPAddress? ip = context.Connection.RemoteIpAddress;
@@ -48,7 +44,6 @@ namespace LapTrinhWeb_Nhom_11.Helpers
             return ip.ToString();
         }
 
-        // Tạo URL thanh toán VNPay
         public static string CreatePaymentUrl(
             IConfiguration config,
             Order order,
@@ -76,7 +71,6 @@ namespace LapTrinhWeb_Nhom_11.Helpers
 
             string query = BuildQuery(data);
 
-            // Tạo chữ ký bằng HASH_SECRET
             string hash = Hmac(HASH_SECRET, query);
 
             string baseUrl = config["VnPay:BaseUrl"]
@@ -85,10 +79,8 @@ namespace LapTrinhWeb_Nhom_11.Helpers
             return baseUrl + "?" + query + "&vnp_SecureHash=" + hash;
         }
 
-        // Xác thực kết quả VNPay trả về
         public static bool Validate(IQueryCollection query)
         {
-            // Kiểm tra đúng mã website của mình
             string receivedTmnCode = query["vnp_TmnCode"].ToString();
 
             if (receivedTmnCode != TMN_CODE)
@@ -124,7 +116,6 @@ namespace LapTrinhWeb_Nhom_11.Helpers
                 && CryptographicOperations.FixedTimeEquals(a, b);
         }
 
-        // Ghép dữ liệu theo thứ tự key
         private static string BuildQuery(
             SortedDictionary<string, string> data)
         {
@@ -134,7 +125,6 @@ namespace LapTrinhWeb_Nhom_11.Helpers
                     + WebUtility.UrlEncode(kv.Value)));
         }
 
-        // Tạo chữ ký HMAC SHA512
         private static string Hmac(string key, string data)
         {
             using HMACSHA512 hmac =

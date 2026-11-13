@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LapTrinhWeb_Nhom_11.Controllers
 {
-    // Nhận kết quả thanh toán từ VNPay
     [Route("/payment")]
     public class PaymentController : Controller
     {
@@ -16,17 +15,13 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             _config = config;
         }
 
-        // VNPay tự gọi về server để báo kết quả (IPN). Cần địa chỉ web public và phải đăng ký trong trang quản lý sandbox VNPay
-        // Chạy localhost thì VNPay không gọi được, lúc đó kết quả được xử lý ở hàm VnPayReturn bên dưới
         [HttpGet("vnpay-ipn")]
         public IActionResult VnPayIpn()
         {
             PaymentResult result = Confirm();
-            // VNPay yêu cầu đúng tên RspCode và Message (viết hoa chữ cái đầu)
             return Content("{\"RspCode\":\"" + result.RspCode + "\",\"Message\":\"" + result.Message + "\"}", "application/json");
         }
 
-        // Khách được VNPay chuyển về đây sau khi thanh toán xong (hoặc bấm hủy)
         [HttpGet("vnpay-return")]
         public IActionResult VnPayReturn()
         {
@@ -37,8 +32,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return View("Result");
         }
 
-        // Kiểm tra chữ ký, số tiền rồi cập nhật đơn hàng.
-        // Hàm này chạy được nhiều lần cho cùng 1 đơn (IPN gọi lại, khách tải lại trang) mà không bị cập nhật 2 lần
         private PaymentResult Confirm()
         {
             PaymentResult result = new PaymentResult();
@@ -87,7 +80,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             using var tran = appDbContext.Database.BeginTransaction();
             if (paid)
             {
-                // chỉ đổi khi PaymentStatus còn là 0, nếu IPN và khách quay lại cùng lúc thì chỉ 1 bên đổi được
                 int affected = appDbContext.Orders
                     .Where(c => c.Id == order.Id && c.PaymentStatus == 0)
                     .ExecuteUpdate(s => s.SetProperty(c => c.PaymentStatus, 1));
@@ -101,7 +93,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 }
                 if (order.Status != 4 && order.AccountId != null)
                 {
-                    // thanh toán xong mới bỏ các sản phẩm vừa mua khỏi giỏ hàng
                     int? cartId = appDbContext.Carts.Where(c => c.AccountId == order.AccountId).Select(c => (int?)c.Id).FirstOrDefault();
                     var detailIds = appDbContext.OrderDetails.Where(c => c.OrderId == order.Id).Select(c => c.ProductDetailId).ToList();
                     if (cartId != null)
@@ -115,7 +106,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 result.Success = true;
                 if (order.Status == 4)
                 {
-                    // khách trả tiền sau khi đơn đã bị hủy (quá 20 phút hoặc khách tự hủy), PaymentStatus = 1 để admin thấy và hoàn tiền
                     result.UserMessage = "Thanh toán thành công nhưng đơn hàng đã bị hủy, cửa hàng sẽ liên hệ để hoàn tiền cho bạn";
                 }
                 else
@@ -125,10 +115,8 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 return result;
             }
 
-            // thanh toán thất bại hoặc khách bấm hủy trên trang VNPay: hủy đơn và trả lại kho, giỏ hàng vẫn còn để đặt lại
             OrderHelper.CancelAndRestock(appDbContext, order.Id, 0);
             tran.Commit();
-            // với VNPay, RspCode 00 nghĩa là đã xử lý xong thông báo (kể cả khi khách thanh toán thất bại)
             result.RspCode = "00";
             result.Message = "Confirm Success";
             result.Success = false;
@@ -146,7 +134,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
 
             public string? OrderCode { get; set; }
 
-            // câu hiển thị cho khách trên trang kết quả
             public string UserMessage { get; set; } = "";
         }
     }

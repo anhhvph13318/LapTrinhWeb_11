@@ -5,11 +5,6 @@ namespace LapTrinhWeb_Nhom_11.Helpers
 {
     public class OrderHelper
     {
-        // Hủy đơn và cộng lại số lượng vào kho.
-        // maxStatus: chỉ hủy khi trạng thái đơn <= maxStatus (khách hủy thì truyền 0, admin hủy thì truyền 2)
-        // Trả về false nếu đơn không còn ở trạng thái được hủy (đã hủy, đã hoàn thành, hoặc vừa bị đổi trạng thái)
-        // Đổi trạng thái bằng 1 câu UPDATE có điều kiện nên 2 người cùng hủy 1 lúc thì chỉ 1 người được cộng kho
-        // Hàm này phải gọi bên trong transaction (BeginTransaction) để đổi trạng thái và cộng kho cùng thành công hoặc cùng hủy
         public static bool CancelAndRestock(AppDbContext appDbContext, int orderId, int maxStatus)
         {
             int affected = appDbContext.Orders
@@ -31,9 +26,6 @@ namespace LapTrinhWeb_Nhom_11.Helpers
             return true;
         }
 
-        // Đơn VNPay đặt quá 20 phút mà chưa thanh toán thì hủy và trả lại kho
-        // (link thanh toán VNPay chỉ sống 15 phút nên sau 20 phút chắc chắn không thanh toán được nữa)
-        // Không có tiến trình chạy nền nên hàm này được gọi mỗi khi có người đặt hàng hoặc xem danh sách đơn
         public static void ReleaseExpired()
         {
             try
@@ -53,7 +45,6 @@ namespace LapTrinhWeb_Nhom_11.Helpers
             }
             catch (Exception)
             {
-                // dọn không được thì bỏ qua, lần sau dọn tiếp, không để lỗi này làm hỏng việc đặt hàng
             }
         }
     }

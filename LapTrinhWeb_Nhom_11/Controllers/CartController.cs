@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LapTrinhWeb_Nhom_11.Controllers
 {
-    // Giỏ hàng của người đang đăng nhập (mỗi tài khoản 1 giỏ)
     [LoginRequired]
     [Route("/cart")]
     public class CartController : Controller
@@ -16,7 +15,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         {
             return View();
         }
-        // Xem giỏ hàng
         [HttpGet("get")]
         public CartDTO Get()
         {
@@ -42,7 +40,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                         && c.ProductDetail.Quantity >= c.Quantity
                 })
                 .ToList();
-            // ảnh lấy từ bảng Image (ưu tiên ảnh chính), có ảnh thì dùng thay cho cột ImageUrl của sản phẩm
             var imageUrls = ImageHelper.GetMainImageUrls(appDbContext, items.Select(c => c.ProductId).Distinct().ToList());
             foreach (var item in items)
             {
@@ -58,7 +55,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return cartDTO;
         }
 
-        // Số lượng sản phẩm trong giỏ (để hiện trên icon giỏ hàng)
         [HttpGet("count")]
         public IActionResult Count()
         {
@@ -68,7 +64,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok(count);
         }
 
-        // Thêm vào giỏ, đã có biến thể này trong giỏ thì cộng dồn số lượng
         [HttpPost("add")]
         public IActionResult Add([FromBody] CartAddDTO dto)
         {
@@ -110,7 +105,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok(new { message = "Đã thêm vào giỏ hàng", totalQuantity = count });
         }
 
-        // Sửa số lượng của 1 dòng trong giỏ
         [HttpPut("update/{id}")]
         public IActionResult Update(int id, [FromBody] CartUpdateDTO dto)
         {
@@ -136,7 +130,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Đã cập nhật số lượng");
         }
 
-        // Xóa 1 dòng khỏi giỏ
         [HttpDelete("remove/{id}")]
         public IActionResult Remove(int id)
         {
@@ -153,7 +146,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Đã xóa khỏi giỏ hàng");
         }
 
-        // Xóa hết giỏ hàng
         [HttpDelete("clear")]
         public IActionResult Clear()
         {
@@ -163,7 +155,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Đã xóa hết giỏ hàng");
         }
 
-        // Lấy giỏ hàng của người đang đăng nhập, chưa có thì tạo mới
         private Cart GetCart(AppDbContext appDbContext)
         {
             int accountId = HttpContext.Session.GetInt32("AccountId") ?? 0;

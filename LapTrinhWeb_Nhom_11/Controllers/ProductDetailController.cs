@@ -39,7 +39,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 productDetail.Colors.Add(colorDTO);
             }
             productDetail.Quantity = productDetailDTO.Count();
-            // Loại bỏ các phần tử trùng nhau
             productDetail.Sizes = productDetail.Sizes.Distinct().ToList();
             productDetail.Colors = productDetail.Colors.Distinct().ToList();
             return productDetail;

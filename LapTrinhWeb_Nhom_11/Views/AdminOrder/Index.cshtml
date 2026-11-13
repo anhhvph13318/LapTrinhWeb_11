@@ -5,7 +5,7 @@
 
 <h3 class="mb-3">Quản lý hóa đơn</h3>
 
-<!-- bộ lọc -->
+
 <div class="card mb-3">
     <div class="card-body">
         <div class="row g-2">
@@ -56,7 +56,7 @@
     <tbody id="tbody"></tbody>
 </table>
 
-<!-- chi tiết hóa đơn -->
+
 <div class="modal fade" id="orderModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -79,22 +79,17 @@
         var currentOrder = null;
         var modal = new bootstrap.Modal(document.getElementById("orderModal"));
 
-        // Trạng thái đơn: 0 Chờ xác nhận, 1 Đã xác nhận, 2 Đang giao, 3 Hoàn thành, 4 Hủy
         var statusNames = ["Chờ xác nhận", "Đã xác nhận", "Đang giao", "Hoàn thành", "Đã hủy"];
         var statusClasses = ["bg-warning text-dark", "bg-info text-dark", "bg-primary", "bg-success", "bg-danger"];
-        // Phương thức thanh toán: 0 COD (thanh toán khi nhận hàng), 1 VNPay
         var paymentMethodNames = ["Thanh toán khi nhận hàng (COD)", "VNPay"];
-        // Trạng thái thanh toán: 0 chưa thanh toán, 1 đã thanh toán
         var paymentStatusNames = ["Chưa thanh toán", "Đã thanh toán"];
 
-        // Từ trạng thái hiện tại thì được chuyển sang những trạng thái nào (giống quy tắc trong OrderController)
         var nextActions = {
             0: [{ to: 1, text: "Xác nhận đơn", cls: "btn-primary" }, { to: 4, text: "Hủy đơn", cls: "btn-danger" }],
             1: [{ to: 2, text: "Bắt đầu giao hàng", cls: "btn-primary" }, { to: 4, text: "Hủy đơn", cls: "btn-danger" }],
             2: [{ to: 3, text: "Hoàn thành", cls: "btn-success" }, { to: 4, text: "Hủy đơn", cls: "btn-danger" }]
         };
 
-        // chống lỗi hiển thị khi dữ liệu có ký tự đặc biệt
         function esc(text) {
             return String(text ?? "")
                 .replace(/&/g, "&amp;")
@@ -104,7 +99,6 @@
                 .replace(/'/g, "&#39;");
         }
 
-        // nếu hết phiên đăng nhập thì về trang login
         function checkLogin(res) {
             if (res.status == 401) {
                 window.location.href = "/login";
@@ -134,7 +128,6 @@
             return "<span class='badge " + cls + "'>" + esc(nameOf(paymentStatusNames, status)) + "</span>";
         }
 
-        // ===== danh sách =====
         async function loadData() {
             var fromDate = document.getElementById("fFromDate").value;
             var toDate = document.getElementById("fToDate").value;
@@ -186,7 +179,6 @@
             document.getElementById("tbody").innerHTML = html;
         }
 
-        // ===== chi tiết =====
         async function openDetail(id) {
             var res = await fetch("/orders/admin/" + id);
             if (!checkLogin(res)) {
@@ -235,7 +227,6 @@
             html += "<h5 class='text-end'>Tổng tiền: " + money(o.totalAmount) + "</h5>";
             document.getElementById("modalBody").innerHTML = html;
 
-            // các nút đổi trạng thái (đơn hoàn thành hoặc đã hủy thì không còn nút nào)
             var actions = nextActions[o.status] ?? [];
             var actionHtml = "";
             actions.forEach(function (a) {
@@ -275,7 +266,6 @@
             }
         }
 
-        // bấm Enter ở ô tìm kiếm thì lọc luôn
         document.getElementById("fKeyword").addEventListener("keydown", function (e) {
             if (e.key == "Enter") {
                 loadData();

@@ -1,6 +1,5 @@
 namespace LapTrinhWeb_Nhom_11.DTO
 {
-    // Một dòng sản phẩm trong hóa đơn
     public class OrderItemDTO
     {
         public int Id { get; set; }
