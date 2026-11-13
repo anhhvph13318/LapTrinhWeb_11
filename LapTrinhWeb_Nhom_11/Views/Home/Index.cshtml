@@ -294,6 +294,28 @@
                 border-radius: 30px;
             }
 
+            .cart-link {
+                position: relative;
+                font-size: 22px;
+            }
+
+            .cart-badge {
+                position: absolute;
+                top: -8px;
+                right: -12px;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 5px;
+                border-radius: 10px;
+                background: #FF5C8A;
+                color: #fff;
+                font-size: 12px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
             .email-form button {
                 border: none;
                 background: #6255D9;
@@ -399,7 +421,10 @@
             </a>
 
             <nav class="menu">
-                <a href="/">Trang chủ</a>
+                <a href="/cart" class="cart-link">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span id="cartBadge" class="cart-badge">0</span>
+                </a>
                 <a href="#products">Sản phẩm</a>
                 <a href="#services">Dịch vụ</a>
                 <a href="#footer">Liên hệ</a>
@@ -524,7 +549,7 @@
     </footer>
 
     <script>
-            const API_URL = "/products";
+            const API_URL = "/products/GetAll";
 
             // Lấy danh sách sản phẩm từ API C#
             async function getProducts() {
@@ -558,7 +583,30 @@
                     `;
                 }
             }
+            // Lấy số lượng sản phẩm trong giỏ hàng
+            async function updateCartBadge() {
+                const badge = document.getElementById("cartBadge");
 
+                try {
+                    const response = await fetch("/cart/count", {
+                        method: "GET",
+                        credentials: "same-origin"
+                    });
+
+                    if (!response.ok) {
+                        badge.textContent = "0";
+                        return;
+                    }
+
+                    const count = await response.json();
+
+                    badge.textContent = count;
+
+                } catch (error) {
+                    console.error("Lỗi lấy số lượng giỏ hàng:", error);
+                    badge.textContent = "0";
+                }
+            }
             // Hiển thị sản phẩm
             function renderProducts(products) {
                 const container = document.getElementById("productList");
@@ -697,6 +745,7 @@
 
             // Khởi chạy
             getProducts();
+            updateCartBadge();
     </script>
 
 </body>

@@ -1,36 +1,51 @@
+
 using LapTrinhWeb_Nhom_11.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace LapTrinhWeb_Nhom_11.Helpers
 {
-    // gắn [LoginRequired] lên controller hoặc action nào cần đăng nhập (khách hàng hay admin đều được)
     public class LoginRequiredAttribute : ActionFilterAttribute
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             int? accountId = context.HttpContext.Session.GetInt32("AccountId");
+
             bool isLogin = false;
-            if (accountId != null)
+
+            if (accountId.HasValue && accountId.Value > 0)
             {
-                // kiểm tra lại trong database để tài khoản bị khóa thì mất quyền ngay
-                AppDbContext appDbContext = new AppDbContext();
-                isLogin = appDbContext.Accounts.Any(c => c.Id == accountId && c.IsActive);
-                if (isLogin == false)
+                using (AppDbContext db = new AppDbContext())
+                {
+                    isLogin = db.Accounts.Any(c =>
+                        c.Id == accountId.Value && c.IsActive);
+                }
+
+                if (!isLogin)
                 {
                     context.HttpContext.Session.Clear();
                 }
             }
-            if (isLogin == false)
+
+            if (!isLogin)
             {
-                string accept = context.HttpContext.Request.Headers["Accept"].ToString();
-                if (accept.Contains("text/html"))
+                var request = context.HttpContext.Request;
+
+                bool isAjax = request.Headers["X-Requested-With"]
+                    == "XMLHttpRequest";
+
+                if (isAjax)
                 {
-                    context.Result = new RedirectResult("/login");
+                    context.Result = new UnauthorizedResult();
                 }
                 else
                 {
-                    context.Result = new StatusCodeResult(401);
+                    string returnUrl = request.Path + request.QueryString;
+
+                    context.Result = new RedirectResult(
+                        "/login?returnUrl=" +
+                        Uri.EscapeDataString(returnUrl)
+                    );
                 }
             }
         }

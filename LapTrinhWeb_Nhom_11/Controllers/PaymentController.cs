@@ -43,7 +43,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         {
             PaymentResult result = new PaymentResult();
             string hashSecret = _config["VnPay:HashSecret"] ?? "";
-            if (VnPayHelper.Validate(Request.Query, hashSecret) == false)
+            if (VnPayHelper.Validate(Request.Query) == false)
             {
                 result.RspCode = "97";
                 result.Message = "Invalid signature";

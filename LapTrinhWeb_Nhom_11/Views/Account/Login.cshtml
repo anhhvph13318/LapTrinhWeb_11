@@ -31,25 +31,44 @@
     </div>
 
     <script>
-        async function login() {
-            var username = document.getElementById("username").value;
-            var password = document.getElementById("password").value;
-            if (username == "" || password == "") {
-                document.getElementById("error").innerText = "Vui lòng nhập đủ tên đăng nhập và mật khẩu";
-                return;
+
+            async function login() {
+                var username = document.getElementById("username").value;
+                var password = document.getElementById("password").value;
+
+                if (username.trim() === "" || password === "") {
+                    document.getElementById("error").innerText =
+                        "Vui lòng nhập đủ tên đăng nhập và mật khẩu";
+                    return;
+                }
+
+                const params = new URLSearchParams(window.location.search);
+                const returnUrl = params.get("returnUrl");
+
+                const loginUrl = returnUrl
+                    ? "/login?returnUrl=" + encodeURIComponent(returnUrl)
+                    : "/login";
+
+                const res = await fetch(loginUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    window.location.href = data.redirect;
+                } else {
+                    document.getElementById("error").innerText =
+                        await res.text();
+                }
             }
-            var res = await fetch("/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: username, password: password })
-            });
-            if (res.ok) {
-                var data = await res.json();
-                window.location.href = data.redirect;
-            } else {
-                document.getElementById("error").innerText = await res.text();
-            }
-        }
+
 
         document.getElementById("btnLogin").addEventListener("click", login);
         // bấm Enter cũng đăng nhập

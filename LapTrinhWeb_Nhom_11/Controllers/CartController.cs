@@ -11,8 +11,13 @@ namespace LapTrinhWeb_Nhom_11.Controllers
     [Route("/cart")]
     public class CartController : Controller
     {
-        // Xem giỏ hàng
         [HttpGet("")]
+        public IActionResult Cart()
+        {
+            return View();
+        }
+        // Xem giỏ hàng
+        [HttpGet("get")]
         public CartDTO Get()
         {
             AppDbContext appDbContext = new AppDbContext();

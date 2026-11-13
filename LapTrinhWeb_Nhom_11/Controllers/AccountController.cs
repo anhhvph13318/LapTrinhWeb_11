@@ -8,41 +8,80 @@ namespace LapTrinhWeb_Nhom_11.Controllers
 {
     public class AccountController : Controller
     {
+
         // Trang đăng nhập
         [HttpGet("/login")]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl)
         {
+            ViewBag.ReturnUrl = Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : "/";
+
             return View();
         }
 
-        // Đăng nhập: admin thì chuyển sang trang quản trị, khách hàng thì về trang bán hàng
+        // Đăng nhập
         [HttpPost("/login")]
-        public IActionResult DoLogin([FromBody] LoginDTO dto)
+        public IActionResult DoLogin(
+            [FromBody] LoginDTO dto,
+            [FromQuery] string? returnUrl)
         {
+            if (dto == null ||
+                string.IsNullOrWhiteSpace(dto.Username) ||
+                string.IsNullOrWhiteSpace(dto.Password))
+            {
+                return BadRequest("Vui lòng nhập tên đăng nhập và mật khẩu");
+            }
+
             AppDbContext appDbContext = new AppDbContext();
+
             string passwordHash = PasswordHelper.Hash(dto.Password);
+
             var account = appDbContext.Accounts
-                .Where(c => c.Username == dto.Username && c.PasswordHash == passwordHash)
-                .FirstOrDefault();
+                .FirstOrDefault(c =>
+                    c.Username == dto.Username &&
+                    c.PasswordHash == passwordHash);
+
             if (account == null)
             {
                 return BadRequest("Sai tên đăng nhập hoặc mật khẩu");
             }
-            if (account.IsActive == false)
+
+            if (!account.IsActive)
             {
                 return BadRequest("Tài khoản đã bị khóa");
             }
+
+            // Lưu thông tin đăng nhập vào Session
             HttpContext.Session.SetInt32("AccountId", account.Id);
             HttpContext.Session.SetString("Role", account.Role);
-            HttpContext.Session.SetString("FullName", account.FullName ?? account.Username);
+            HttpContext.Session.SetString(
+                "FullName",
+                account.FullName ?? account.Username
+            );
 
-            string redirect = "/";
+            string redirect;
+
             if (account.Role == "ADMIN")
             {
                 redirect = "/admin";
             }
-            return Ok(new { redirect = redirect });
+            else if (account.Role == "CUSTOMER")
+            {
+                // Nếu có returnUrl hợp lệ thì quay lại trang trước đó
+                // Nếu không có thì chuyển về trang chủ /home
+                redirect = Url.IsLocalUrl(returnUrl)
+                    ? returnUrl!
+                    : "/home";
+            }
+            else
+            {
+                return BadRequest("Vai trò tài khoản không hợp lệ");
+            }
+
+            return Ok(new { redirect });
         }
+
 
         // Đăng xuất
         [HttpGet("/logout")]
