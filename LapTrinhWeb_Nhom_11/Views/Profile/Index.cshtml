@@ -1,0 +1,313 @@
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BUBU Shoes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #F7F5FF;
+            color: #25254B;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        .header {
+            background: #fff;
+            padding: 18px 0;
+            box-shadow: 0 2px 10px #00000008;
+        }
+
+        .header-content {
+            max-width: 1250px;
+            margin: auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            font-weight: 600;
+        }
+
+        .header-right > a:hover {
+            color: #6255D9;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: 800;
+            color: #6255D9;
+        }
+
+        .page {
+            margin: 30px auto 60px;
+            padding: 0 20px;
+        }
+
+        .page h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #E6E3F5;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 18px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #E6E3F5;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 15px;
+            color: #25254B;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: #6255D9;
+        }
+
+        .field input:disabled {
+            background: #F7F6FC;
+            color: #8A88A8;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #8A88A8;
+            margin-top: 4px;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            padding: 11px 22px;
+            border-radius: 10px;
+            background: #6255D9;
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .btn:hover {
+            background: #5043c4;
+        }
+
+        .msg {
+            min-height: 20px;
+            margin-bottom: 14px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .msg.ok {
+            color: #1f9d55;
+        }
+
+        .msg.err {
+            color: #e0245e;
+        }
+
+        .page {
+            max-width: 680px;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/home" class="logo"><i class="fa-solid fa-shoe-prints"></i> BUBU Shoes</a>
+            <div class="header-right">
+                <a href="/home">Trang chủ</a>
+                <partial name="_UserMenu" />
+            </div>
+        </div>
+    </header>
+
+    <main class="page">
+        <h1>Thông tin cá nhân</h1>
+
+        <div class="card">
+            <h2>Thông tin tài khoản</h2>
+            <div class="field">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="username" disabled />
+            </div>
+            <div class="field">
+                <label>Họ tên</label>
+                <input type="text" id="fullName" maxlength="100" />
+            </div>
+            <div class="field">
+                <label>Email</label>
+                <input type="text" id="email" maxlength="100" />
+            </div>
+            <div class="field">
+                <label>Số điện thoại</label>
+                <input type="text" id="phone" maxlength="20" />
+            </div>
+            <div id="infoMessage" class="msg"></div>
+            <button type="button" id="btnSaveInfo" class="btn">Lưu thông tin</button>
+        </div>
+
+        <div class="card">
+            <h2>Đổi mật khẩu</h2>
+            <div class="field">
+                <label>Mật khẩu hiện tại</label>
+                <input type="password" id="oldPassword" maxlength="50" autocomplete="current-password" />
+            </div>
+            <div class="field">
+                <label>Mật khẩu mới</label>
+                <input type="password" id="newPassword" maxlength="50" autocomplete="new-password" />
+                <div class="hint">6-50 ký tự</div>
+            </div>
+            <div class="field">
+                <label>Nhập lại mật khẩu mới</label>
+                <input type="password" id="confirmPassword" maxlength="50" autocomplete="new-password" />
+            </div>
+            <div id="passwordMessage" class="msg"></div>
+            <button type="button" id="btnSavePassword" class="btn">Đổi mật khẩu</button>
+        </div>
+    </main>
+
+    <script>
+        async function callApi(url, method, body) {
+            var option = { method: method, headers: {} };
+            if (body) {
+                option.headers["Content-Type"] = "application/json";
+                option.body = JSON.stringify(body);
+            }
+            var res = await fetch(url, option);
+            if (res.status == 401) {
+                window.location.href = "/login";
+                return null;
+            }
+            return res;
+        }
+
+        function showMessage(id, text, ok) {
+            var box = document.getElementById(id);
+            box.className = "msg " + (ok ? "ok" : "err");
+            box.innerText = text;
+        }
+
+        async function loadProfile() {
+            var res = await callApi("/profile/data", "GET");
+            if (res == null) {
+                return;
+            }
+            var data = await res.json();
+            document.getElementById("username").value = data.username || "";
+            document.getElementById("fullName").value = data.fullName || "";
+            document.getElementById("email").value = data.email || "";
+            document.getElementById("phone").value = data.phone || "";
+        }
+
+        async function saveInfo() {
+            var fullName = document.getElementById("fullName").value.trim();
+            var email = document.getElementById("email").value.trim();
+            var phone = document.getElementById("phone").value.trim();
+            if (fullName == "") {
+                showMessage("infoMessage", "Họ tên không được để trống", false);
+                return;
+            }
+            if (email != "" && !/^[^@@\s]+@@[^@@\s]+\.[^@@\s]+$/.test(email)) {
+                showMessage("infoMessage", "Email không hợp lệ", false);
+                return;
+            }
+            if (phone != "" && !/^\+?[0-9]{9,15}$/.test(phone)) {
+                showMessage("infoMessage", "Số điện thoại không hợp lệ", false);
+                return;
+            }
+            var res = await callApi("/profile/update", "PUT", { fullName: fullName, email: email, phone: phone });
+            if (res == null) {
+                return;
+            }
+            showMessage("infoMessage", await res.text(), res.ok);
+            if (res.ok) {
+                loadProfile();
+            }
+        }
+
+        async function savePassword() {
+            var oldPassword = document.getElementById("oldPassword").value;
+            var newPassword = document.getElementById("newPassword").value;
+            var confirmPassword = document.getElementById("confirmPassword").value;
+            if (oldPassword == "") {
+                showMessage("passwordMessage", "Vui lòng nhập mật khẩu hiện tại", false);
+                return;
+            }
+            if (newPassword.length < 6 || newPassword.length > 50) {
+                showMessage("passwordMessage", "Mật khẩu mới từ 6 đến 50 ký tự", false);
+                return;
+            }
+            if (newPassword != confirmPassword) {
+                showMessage("passwordMessage", "Mật khẩu nhập lại không khớp", false);
+                return;
+            }
+            var res = await callApi("/profile/password", "PUT", { oldPassword: oldPassword, newPassword: newPassword });
+            if (res == null) {
+                return;
+            }
+            showMessage("passwordMessage", await res.text(), res.ok);
+            if (res.ok) {
+                document.getElementById("oldPassword").value = "";
+                document.getElementById("newPassword").value = "";
+                document.getElementById("confirmPassword").value = "";
+            }
+        }
+
+        document.getElementById("btnSaveInfo").addEventListener("click", saveInfo);
+        document.getElementById("btnSavePassword").addEventListener("click", savePassword);
+        loadProfile();
+    </script>
+</body>
+</html>

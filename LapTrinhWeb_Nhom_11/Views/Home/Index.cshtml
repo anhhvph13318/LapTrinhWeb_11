@@ -428,8 +428,10 @@
                 <a href="#products">Sản phẩm</a>
                 <a href="#services">Dịch vụ</a>
                 <a href="#footer">Liên hệ</a>
+                <a href="/track">Tra cứu đơn hàng</a>
                 @if (Context.Session.GetString("AccountId") != null)
                 {
+                    <partial name="_UserMenu" />
                     <a href="/Logout">Đăng xuất</a>
                 }
                 else

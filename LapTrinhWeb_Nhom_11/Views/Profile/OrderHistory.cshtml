@@ -1,0 +1,433 @@
+@{
+    ViewData["Title"] = "Lịch sử đơn hàng";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BUBU Shoes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #F7F5FF;
+            color: #25254B;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        .header {
+            background: #fff;
+            padding: 18px 0;
+            box-shadow: 0 2px 10px #00000008;
+        }
+
+        .header-content {
+            max-width: 1250px;
+            margin: auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            font-weight: 600;
+        }
+
+        .header-right > a:hover {
+            color: #6255D9;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: 800;
+            color: #6255D9;
+        }
+
+        .page {
+            margin: 30px auto 60px;
+            padding: 0 20px;
+        }
+
+        .page h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #E6E3F5;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 18px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #E6E3F5;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 15px;
+            color: #25254B;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: #6255D9;
+        }
+
+        .field input:disabled {
+            background: #F7F6FC;
+            color: #8A88A8;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #8A88A8;
+            margin-top: 4px;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            padding: 11px 22px;
+            border-radius: 10px;
+            background: #6255D9;
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .btn:hover {
+            background: #5043c4;
+        }
+
+        .msg {
+            min-height: 20px;
+            margin-bottom: 14px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .msg.ok {
+            color: #1f9d55;
+        }
+
+        .msg.err {
+            color: #e0245e;
+        }
+
+        .page {
+            max-width: 1100px;
+        }
+
+        .table-wrap {
+            background: #fff;
+            border: 1px solid #E6E3F5;
+            border-radius: 16px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #E6E3F5;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #F7F6FC;
+            font-weight: 700;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .s0 {
+            background: #FFF3CD;
+            color: #8a6d00;
+        }
+
+        .s1 {
+            background: #D7ECFF;
+            color: #0b5394;
+        }
+
+        .s2 {
+            background: #E5E0FF;
+            color: #4b3fc4;
+        }
+
+        .s3 {
+            background: #D4F5E0;
+            color: #1f7a45;
+        }
+
+        .s4 {
+            background: #E8E8EE;
+            color: #666;
+        }
+
+        .btn-small {
+            border: 1px solid #6255D9;
+            background: #fff;
+            color: #6255D9;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 6px;
+        }
+
+        .btn-small:hover {
+            background: #F1EFFF;
+        }
+
+        .btn-small.danger {
+            border-color: #e0245e;
+            color: #e0245e;
+        }
+
+        .btn-small.danger:hover {
+            background: #FFEAF1;
+        }
+
+        .detail-box {
+            background: #FBFAFF;
+        }
+
+        .detail-box p {
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .detail-box table {
+            margin-top: 10px;
+            background: #fff;
+        }
+
+        .detail-box img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .empty {
+            display: none;
+            text-align: center;
+            padding: 40px 0;
+            color: #8A88A8;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/home" class="logo"><i class="fa-solid fa-shoe-prints"></i> BUBU Shoes</a>
+            <div class="header-right">
+                <a href="/home">Trang chủ</a>
+                <partial name="_UserMenu" />
+            </div>
+        </div>
+    </header>
+
+    <main class="page">
+        <h1>Lịch sử đơn hàng</h1>
+        <div id="pageMessage" class="msg"></div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Số SP</th>
+                        <th>Tổng tiền</th>
+                        <th>Thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
+        <div id="emptyText" class="empty">Bạn chưa có đơn hàng nào</div>
+    </main>
+
+    <script>
+        var statusNames = ["Chờ xác nhận", "Đã xác nhận", "Đang giao", "Hoàn thành", "Đã hủy"];
+        var statusClasses = ["s0", "s1", "s2", "s3", "s4"];
+        var paymentMethodNames = ["COD", "VNPay"];
+        var paymentStatusNames = ["Chưa thanh toán", "Đã thanh toán"];
+
+        function esc(text) {
+            if (text === null || text === undefined) {
+                return "";
+            }
+            return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function money(value) {
+            return Number(value).toLocaleString("vi-VN") + " đ";
+        }
+
+        function showMessage(text, ok) {
+            var box = document.getElementById("pageMessage");
+            box.className = "msg " + (ok ? "ok" : "err");
+            box.innerText = text;
+        }
+
+        async function callApi(url, method) {
+            var res = await fetch(url, { method: method });
+            if (res.status == 401) {
+                window.location.href = "/login";
+                return null;
+            }
+            return res;
+        }
+
+        async function loadOrders() {
+            var res = await callApi("/orders/my", "GET");
+            if (res == null) {
+                return;
+            }
+            var orders = await res.json();
+            var html = "";
+            for (var i = 0; i < orders.length; i++) {
+                var o = orders[i];
+                var canCancel = o.status == 0 && !(o.paymentMethod == 1 && o.paymentStatus == 1);
+                html += "<tr>";
+                html += "<td>" + esc(o.orderCode) + "</td>";
+                html += "<td>" + new Date(o.createdAt).toLocaleString("vi-VN") + "</td>";
+                html += "<td>" + o.itemCount + "</td>";
+                html += "<td>" + money(o.totalAmount) + "</td>";
+                html += "<td>" + esc(paymentMethodNames[o.paymentMethod]) + " - " + esc(paymentStatusNames[o.paymentStatus]) + "</td>";
+                html += "<td><span class='badge " + (statusClasses[o.status] || "s4") + "'>" + esc(statusNames[o.status]) + "</span></td>";
+                html += "<td>";
+                html += "<button type='button' class='btn-small' onclick='toggleDetail(" + o.id + ")'>Chi tiết</button>";
+                if (canCancel) {
+                    html += "<button type='button' class='btn-small danger' onclick='cancelOrder(" + o.id + ")'>Hủy đơn</button>";
+                }
+                html += "</td>";
+                html += "</tr>";
+                html += "<tr id='detail-" + o.id + "' style='display: none;'><td colspan='7' class='detail-box' id='detailBox-" + o.id + "'></td></tr>";
+            }
+            document.getElementById("tbody").innerHTML = html;
+            document.getElementById("emptyText").style.display = orders.length == 0 ? "block" : "none";
+        }
+
+        async function toggleDetail(id) {
+            var row = document.getElementById("detail-" + id);
+            if (row.style.display != "none") {
+                row.style.display = "none";
+                return;
+            }
+            var res = await callApi("/orders/my/" + id, "GET");
+            if (res == null) {
+                return;
+            }
+            if (!res.ok) {
+                showMessage(await res.text(), false);
+                return;
+            }
+            var order = await res.json();
+            var html = "<p><b>Người nhận:</b> " + esc(order.customerName) + " - " + esc(order.phone) + "</p>";
+            html += "<p><b>Địa chỉ:</b> " + esc(order.address) + "</p>";
+            if (order.note) {
+                html += "<p><b>Ghi chú:</b> " + esc(order.note) + "</p>";
+            }
+            if (order.trackingCode) {
+                html += "<p><b>Mã vận đơn:</b> " + esc(order.trackingCode) + "</p>";
+            }
+            html += "<table><thead><tr><th></th><th>Sản phẩm</th><th>Phân loại</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th></tr></thead><tbody>";
+            for (var i = 0; i < order.items.length; i++) {
+                var item = order.items[i];
+                var image = item.imageUrl ? "<img src='" + esc(item.imageUrl) + "' />" : "";
+                html += "<tr>";
+                html += "<td>" + image + "</td>";
+                html += "<td>" + esc(item.productName) + "</td>";
+                html += "<td>" + esc(item.colorName) + " / " + esc(item.sizeName) + "</td>";
+                html += "<td>" + money(item.price) + "</td>";
+                html += "<td>" + item.quantity + "</td>";
+                html += "<td>" + money(item.price * item.quantity) + "</td>";
+                html += "</tr>";
+            }
+            html += "</tbody></table>";
+            document.getElementById("detailBox-" + id).innerHTML = html;
+            row.style.display = "";
+        }
+
+        async function cancelOrder(id) {
+            if (!confirm("Bạn có chắc muốn hủy đơn hàng này?")) {
+                return;
+            }
+            var res = await callApi("/orders/cancel/" + id, "PUT");
+            if (res == null) {
+                return;
+            }
+            showMessage(await res.text(), res.ok);
+            loadOrders();
+        }
+
+        loadOrders();
+    </script>
+</body>
+</html>

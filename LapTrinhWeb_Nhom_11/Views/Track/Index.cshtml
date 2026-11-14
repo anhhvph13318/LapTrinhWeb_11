@@ -1,0 +1,444 @@
+@{
+    ViewData["Title"] = "Tra cứu đơn hàng";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BUBU Shoes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #F7F5FF;
+            color: #25254B;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        .header {
+            background: #fff;
+            padding: 18px 0;
+            box-shadow: 0 2px 10px #00000008;
+        }
+
+        .header-content {
+            max-width: 1250px;
+            margin: auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            font-weight: 600;
+        }
+
+        .header-right > a:hover {
+            color: #6255D9;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: 800;
+            color: #6255D9;
+        }
+
+        .page {
+            margin: 30px auto 60px;
+            padding: 0 20px;
+        }
+
+        .page h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #E6E3F5;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 18px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #E6E3F5;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 15px;
+            color: #25254B;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: #6255D9;
+        }
+
+        .field input:disabled {
+            background: #F7F6FC;
+            color: #8A88A8;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #8A88A8;
+            margin-top: 4px;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            padding: 11px 22px;
+            border-radius: 10px;
+            background: #6255D9;
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .btn:hover {
+            background: #5043c4;
+        }
+
+        .msg {
+            min-height: 20px;
+            margin-bottom: 14px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .msg.ok {
+            color: #1f9d55;
+        }
+
+        .msg.err {
+            color: #e0245e;
+        }
+
+        .page {
+            max-width: 760px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .form-row .field {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 0;
+        }
+
+        .steps {
+            display: flex;
+            margin: 6px 0 26px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            font-size: 13px;
+            color: #8A88A8;
+            font-weight: 600;
+        }
+
+        .step .dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #E6E3F5;
+            color: #fff;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step::before {
+            content: "";
+            position: absolute;
+            top: 14px;
+            left: -50%;
+            width: 100%;
+            height: 3px;
+            background: #E6E3F5;
+        }
+
+        .step:first-child::before {
+            display: none;
+        }
+
+        .step.done {
+            color: #25254B;
+        }
+
+        .step.done .dot {
+            background: #6255D9;
+        }
+
+        .step.done::before {
+            background: #6255D9;
+        }
+
+        .cancelled {
+            background: #FFEAF1;
+            color: #e0245e;
+            font-weight: 700;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info p {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info b {
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        .item {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #E6E3F5;
+        }
+
+        .item img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #F7F6FC;
+        }
+
+        .item .name {
+            flex: 1;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .item .sub {
+            font-weight: 400;
+            color: #8A88A8;
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .item .price {
+            font-weight: 700;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 16px;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .total span:last-child {
+            color: #6255D9;
+        }
+
+        .note {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: #FFF3CD;
+            color: #8a6d00;
+            font-size: 13px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/home" class="logo"><i class="fa-solid fa-shoe-prints"></i> BUBU Shoes</a>
+            <div class="header-right">
+                <a href="/home">Trang chủ</a>
+                <partial name="_UserMenu" />
+            </div>
+        </div>
+    </header>
+
+    <main class="page">
+        <h1>Tra cứu đơn hàng</h1>
+
+        <div class="card">
+            <div class="form-row">
+                <div class="field">
+                    <label>Mã đơn hàng</label>
+                    <input type="text" id="code" maxlength="30" placeholder="Ví dụ: DH241114103045123" />
+                </div>
+                <div class="field">
+                    <label>Số điện thoại đặt hàng</label>
+                    <input type="text" id="phone" maxlength="20" placeholder="Số điện thoại nhận hàng" />
+                </div>
+                <button type="button" id="btnTrack" class="btn">Tra cứu</button>
+            </div>
+            <div id="message" class="msg" style="margin: 14px 0 0;"></div>
+        </div>
+
+        <div id="result" style="display: none;"></div>
+    </main>
+
+    <script>
+        var stepNames = ["Chờ xác nhận", "Đã xác nhận", "Đang giao", "Hoàn thành"];
+        var paymentMethodNames = ["Thanh toán khi nhận hàng (COD)", "VNPay"];
+        var paymentStatusNames = ["Chưa thanh toán", "Đã thanh toán"];
+
+        function esc(text) {
+            if (text === null || text === undefined) {
+                return "";
+            }
+            return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function money(value) {
+            return Number(value).toLocaleString("vi-VN") + " đ";
+        }
+
+        function showMessage(text, ok) {
+            var box = document.getElementById("message");
+            box.className = "msg " + (ok ? "ok" : "err");
+            box.innerText = text;
+        }
+
+        function render(order) {
+            var html = "<div class='card'>";
+            html += "<h2>Đơn hàng " + esc(order.orderCode) + "</h2>";
+            if (order.status == 4) {
+                html += "<div class='cancelled'><i class='fa-solid fa-circle-xmark'></i> Đơn hàng đã bị hủy</div>";
+            } else {
+                html += "<div class='steps'>";
+                for (var i = 0; i < stepNames.length; i++) {
+                    var done = i <= order.status ? " done" : "";
+                    html += "<div class='step" + done + "'><div class='dot'>" + (i + 1) + "</div>" + stepNames[i] + "</div>";
+                }
+                html += "</div>";
+            }
+            html += "<div class='info'>";
+            html += "<p><b>Ngày đặt:</b> " + new Date(order.createdAt).toLocaleString("vi-VN") + "</p>";
+            html += "<p><b>Người nhận:</b> " + esc(order.customerName) + " - " + esc(order.phone) + "</p>";
+            html += "<p><b>Địa chỉ:</b> " + esc(order.address) + "</p>";
+            if (order.note) {
+                html += "<p><b>Ghi chú:</b> " + esc(order.note) + "</p>";
+            }
+            html += "<p><b>Thanh toán:</b> " + esc(paymentMethodNames[order.paymentMethod]) + " - " + esc(paymentStatusNames[order.paymentStatus]) + "</p>";
+            if (order.trackingCode) {
+                html += "<p><b>Mã vận đơn:</b> " + esc(order.trackingCode) + "</p>";
+            }
+            html += "</div>";
+            if (order.status == 0 && order.paymentMethod == 1 && order.paymentStatus == 0) {
+                html += "<div class='note'>Đơn chưa thanh toán VNPay sẽ tự hủy nếu không thanh toán trong thời gian quy định.</div>";
+            }
+            html += "</div>";
+
+            html += "<div class='card'><h2>Sản phẩm</h2>";
+            for (var j = 0; j < order.items.length; j++) {
+                var item = order.items[j];
+                var image = item.imageUrl ? "<img src='" + esc(item.imageUrl) + "' />" : "<img />";
+                html += "<div class='item'>" + image;
+                html += "<div class='name'>" + esc(item.productName) + "<div class='sub'>" + esc(item.colorName) + " / " + esc(item.sizeName) + " &times; " + item.quantity + "</div></div>";
+                html += "<div class='price'>" + money(item.price * item.quantity) + "</div>";
+                html += "</div>";
+            }
+            html += "<div class='total'><span>Tổng tiền</span><span>" + money(order.totalAmount) + "</span></div>";
+            html += "</div>";
+
+            var box = document.getElementById("result");
+            box.innerHTML = html;
+            box.style.display = "block";
+        }
+
+        async function track() {
+            var code = document.getElementById("code").value.trim();
+            var phone = document.getElementById("phone").value.replace(/\s/g, "");
+            document.getElementById("result").style.display = "none";
+            if (code == "" || phone == "") {
+                showMessage("Vui lòng nhập mã đơn hàng và số điện thoại đặt hàng", false);
+                return;
+            }
+            showMessage("", true);
+            var res = await fetch("/track/data?code=" + encodeURIComponent(code) + "&phone=" + encodeURIComponent(phone));
+            if (!res.ok) {
+                showMessage(await res.text(), false);
+                return;
+            }
+            render(await res.json());
+        }
+
+        document.getElementById("btnTrack").addEventListener("click", track);
+        document.getElementById("code").addEventListener("keydown", function (e) {
+            if (e.key == "Enter") {
+                track();
+            }
+        });
+        document.getElementById("phone").addEventListener("keydown", function (e) {
+            if (e.key == "Enter") {
+                track();
+            }
+        });
+        var params = new URLSearchParams(window.location.search);
+        if (params.get("code")) {
+            document.getElementById("code").value = params.get("code");
+        }
+    </script>
+</body>
+</html>

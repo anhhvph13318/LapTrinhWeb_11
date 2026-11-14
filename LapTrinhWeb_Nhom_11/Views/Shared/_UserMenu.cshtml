@@ -1,0 +1,85 @@
+@if (Context.Session.GetInt32("AccountId") != null)
+{
+    <details class="user-menu" id="userMenu">
+        <summary>
+            <i class="fa-regular fa-circle-user"></i>
+            <span>@Context.Session.GetString("FullName")</span>
+            <i class="fa-solid fa-chevron-down"></i>
+        </summary>
+        <div class="user-menu-list">
+            <a href="/profile"><i class="fa-regular fa-id-card"></i> Thông tin cá nhân</a>
+            <a href="/order-history"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử đơn hàng</a>
+        </div>
+    </details>
+    <style>
+        .user-menu {
+            position: relative;
+        }
+
+        .user-menu summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #25254B;
+        }
+
+        .user-menu summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .user-menu summary:hover {
+            color: #6255D9;
+        }
+
+        .user-menu summary span {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-menu summary .fa-chevron-down {
+            font-size: 11px;
+        }
+
+        .user-menu-list {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 12px);
+            min-width: 220px;
+            background: #fff;
+            border: 1px solid #E6E3F5;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px #25254B22;
+            padding: 6px;
+            z-index: 50;
+        }
+
+        .user-menu-list a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #25254B;
+            white-space: nowrap;
+        }
+
+        .user-menu-list a:hover {
+            background: #F7F5FF;
+            color: #6255D9;
+        }
+    </style>
+    <script>
+        document.addEventListener("click", function (e) {
+            var menu = document.getElementById("userMenu");
+            if (menu && !menu.contains(e.target)) {
+                menu.removeAttribute("open");
+            }
+        });
+    </script>
+}
