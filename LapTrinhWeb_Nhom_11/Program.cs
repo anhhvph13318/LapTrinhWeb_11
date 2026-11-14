@@ -1,13 +1,9 @@
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
-
-builder.Services.AddDistributedMemoryCache();
-
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
+    options.IdleTimeout = TimeSpan.FromHours(3);
     options.Cookie.IsEssential = true;
 });
 
@@ -28,14 +24,8 @@ app.UseSession();
 
 app.UseAuthorization();
 
-app.MapGet("/", context =>
-{
-    context.Response.Redirect("/admin");
-    return Task.CompletedTask;
-});
-
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action=Index}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

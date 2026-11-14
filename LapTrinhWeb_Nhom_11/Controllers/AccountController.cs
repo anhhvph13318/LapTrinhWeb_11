@@ -8,75 +8,53 @@ namespace LapTrinhWeb_Nhom_11.Controllers
 {
     public class AccountController : Controller
     {
-
         [HttpGet("/login")]
-        public IActionResult Login(string? returnUrl)
+        public IActionResult Login()
         {
-            ViewBag.ReturnUrl = Url.IsLocalUrl(returnUrl)
-                ? returnUrl
-                : "/";
-
+            if (HttpContext.Session.GetInt32("AccountId") != null)
+            {
+                if (HttpContext.Session.GetString("Role") == "ADMIN")
+                {
+                    return Redirect("/admin");
+                }
+                if (HttpContext.Session.GetString("Role") == "CUSTOMER")
+                {
+                    return Redirect("/home");
+                }
+                return Redirect("/");
+            }
             return View();
         }
 
         [HttpPost("/login")]
-        public IActionResult DoLogin(
-            [FromBody] LoginDTO dto,
-            [FromQuery] string? returnUrl)
+        public IActionResult DoLogin([FromBody] LoginDTO dto)
         {
-            if (dto == null ||
-                string.IsNullOrWhiteSpace(dto.Username) ||
-                string.IsNullOrWhiteSpace(dto.Password))
-            {
-                return BadRequest("Vui lòng nhập tên đăng nhập và mật khẩu");
-            }
-
             AppDbContext appDbContext = new AppDbContext();
-
+            string username = (dto.Username ?? "").Trim();
             string passwordHash = PasswordHelper.Hash(dto.Password);
-
             var account = appDbContext.Accounts
-                .FirstOrDefault(c =>
-                    c.Username == dto.Username &&
-                    c.PasswordHash == passwordHash);
-
+                .Where(c => c.Username == username && c.PasswordHash == passwordHash)
+                .FirstOrDefault();
             if (account == null)
             {
                 return BadRequest("Sai tên đăng nhập hoặc mật khẩu");
             }
-
-            if (!account.IsActive)
+            if (account.IsActive == false)
             {
                 return BadRequest("Tài khoản đã bị khóa");
             }
-
             HttpContext.Session.SetInt32("AccountId", account.Id);
             HttpContext.Session.SetString("Role", account.Role);
-            HttpContext.Session.SetString(
-                "FullName",
-                account.FullName ?? account.Username
-            );
+            HttpContext.Session.SetString("FullName", account.FullName ?? account.Username);
+            GuestCartHelper.MergeToAccount(HttpContext.Session, appDbContext, account.Id);
 
-            string redirect;
-
+            string redirect = "/";
             if (account.Role == "ADMIN")
             {
                 redirect = "/admin";
             }
-            else if (account.Role == "CUSTOMER")
-            {
-                redirect = Url.IsLocalUrl(returnUrl)
-                    ? returnUrl!
-                    : "/home";
-            }
-            else
-            {
-                return BadRequest("Vai trò tài khoản không hợp lệ");
-            }
-
-            return Ok(new { redirect });
+            return Ok(new { redirect = redirect });
         }
-
 
         [HttpGet("/logout")]
         public IActionResult Logout()
@@ -85,6 +63,19 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Redirect("/login");
         }
 
+        [HttpPost("/register")]
+        public IActionResult Register([FromBody] AccountFormDTO form)
+        {
+            form.Role = "CUSTOMER";
+            AppDbContext appDbContext = new AppDbContext();
+            string? error = CheckForm(appDbContext, form, 0);
+            if (error != null)
+            {
+                return BadRequest(error);
+            }
+            CreateAccount(appDbContext, form, "CUSTOMER");
+            return Ok("Đăng ký thành công");
+        }
 
         [AdminOnly]
         [HttpGet("/accounts/admin")]
@@ -133,16 +124,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             {
                 return BadRequest(error);
             }
-            Account account = new Account();
-            account.Username = form.Username!.Trim();
-            account.PasswordHash = PasswordHelper.Hash(form.Password!);
-            account.FullName = Clean(form.FullName);
-            account.Email = Clean(form.Email);
-            account.Phone = Clean(form.Phone);
-            account.Role = form.Role;
-            account.IsActive = true;
-            appDbContext.Accounts.Add(account);
-            appDbContext.SaveChanges();
+            CreateAccount(appDbContext, form, form.Role);
             return Ok("Tạo tài khoản thành công");
         }
 
@@ -211,6 +193,19 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return Ok("Đã mở khóa tài khoản");
         }
 
+        private void CreateAccount(AppDbContext appDbContext, AccountFormDTO form, string role)
+        {
+            Account account = new Account();
+            account.Username = form.Username!.Trim();
+            account.PasswordHash = PasswordHelper.Hash(form.Password!);
+            account.FullName = Clean(form.FullName);
+            account.Email = Clean(form.Email);
+            account.Phone = Clean(form.Phone);
+            account.Role = role;
+            account.IsActive = true;
+            appDbContext.Accounts.Add(account);
+            appDbContext.SaveChanges();
+        }
 
         private string? Clean(string? text)
         {

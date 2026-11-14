@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LapTrinhWeb_Nhom_11.Controllers
 {
-    [LoginRequired]
     [Route("/cart")]
     public class CartController : Controller
     {
@@ -19,27 +18,36 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         public CartDTO Get()
         {
             AppDbContext appDbContext = new AppDbContext();
-            var cart = GetCart(appDbContext);
-            var items = appDbContext.CartItems.Where(c => c.CartId == cart.Id)
-                .OrderByDescending(c => c.Id)
-                .Select(c => new CartItemDTO
-                {
-                    Id = c.Id,
-                    ProductDetailId = c.ProductDetailId,
-                    ProductId = c.ProductDetail.ProductId,
-                    ProductCode = c.ProductDetail.Product.Code,
-                    ProductName = c.ProductDetail.Product.Name,
-                    ImageUrl = c.ProductDetail.Product.ImageUrl,
-                    SizeName = c.ProductDetail.Size.Name,
-                    ColorName = c.ProductDetail.Color.Name,
-                    Price = c.ProductDetail.Product.Price,
-                    Quantity = c.Quantity,
-                    Stock = c.ProductDetail.Quantity,
-                    IsAvailable = c.ProductDetail.Product.IsDeleted == false
-                        && c.ProductDetail.Product.Status == 1
-                        && c.ProductDetail.Quantity >= c.Quantity
-                })
-                .ToList();
+            int? accountId = GuestCartHelper.GetLoginId(HttpContext.Session);
+            List<CartItemDTO> items;
+            if (accountId != null)
+            {
+                var cart = GetCart(appDbContext, accountId.Value);
+                items = appDbContext.CartItems.Where(c => c.CartId == cart.Id)
+                    .OrderByDescending(c => c.Id)
+                    .Select(c => new CartItemDTO
+                    {
+                        Id = c.Id,
+                        ProductDetailId = c.ProductDetailId,
+                        ProductId = c.ProductDetail.ProductId,
+                        ProductCode = c.ProductDetail.Product.Code,
+                        ProductName = c.ProductDetail.Product.Name,
+                        ImageUrl = c.ProductDetail.Product.ImageUrl,
+                        SizeName = c.ProductDetail.Size.Name,
+                        ColorName = c.ProductDetail.Color.Name,
+                        Price = c.ProductDetail.Product.Price,
+                        Quantity = c.Quantity,
+                        Stock = c.ProductDetail.Quantity,
+                        IsAvailable = c.ProductDetail.Product.IsDeleted == false
+                            && c.ProductDetail.Product.Status == 1
+                            && c.ProductDetail.Quantity >= c.Quantity
+                    })
+                    .ToList();
+            }
+            else
+            {
+                items = GetGuestItems(appDbContext);
+            }
             var imageUrls = ImageHelper.GetMainImageUrls(appDbContext, items.Select(c => c.ProductId).Distinct().ToList());
             foreach (var item in items)
             {
@@ -58,8 +66,13 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         [HttpGet("count")]
         public IActionResult Count()
         {
+            int? accountId = GuestCartHelper.GetLoginId(HttpContext.Session);
+            if (accountId == null)
+            {
+                return Ok(GuestCartHelper.Get(HttpContext.Session).Sum(c => c.Quantity));
+            }
             AppDbContext appDbContext = new AppDbContext();
-            var cart = GetCart(appDbContext);
+            var cart = GetCart(appDbContext, accountId.Value);
             int count = appDbContext.CartItems.Where(c => c.CartId == cart.Id).Sum(c => (int?)c.Quantity) ?? 0;
             return Ok(count);
         }
@@ -79,7 +92,31 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             {
                 return BadRequest("Sản phẩm không tồn tại hoặc đã ngừng bán");
             }
-            var cart = GetCart(appDbContext);
+            int? accountId = GuestCartHelper.GetLoginId(HttpContext.Session);
+            if (accountId == null)
+            {
+                var guestItems = GuestCartHelper.Get(HttpContext.Session);
+                var guestItem = guestItems.Where(c => c.ProductDetailId == dto.ProductDetailId).FirstOrDefault();
+                int guestInCart = guestItem == null ? 0 : guestItem.Quantity;
+                if (dto.Quantity + guestInCart > detail.Quantity)
+                {
+                    return BadRequest("Kho chỉ còn " + detail.Quantity + " sản phẩm (trong giỏ của bạn đã có " + guestInCart + ")");
+                }
+                if (guestItem == null)
+                {
+                    guestItem = new GuestCartItem();
+                    guestItem.ProductDetailId = dto.ProductDetailId;
+                    guestItem.Quantity = dto.Quantity;
+                    guestItems.Add(guestItem);
+                }
+                else
+                {
+                    guestItem.Quantity = guestItem.Quantity + dto.Quantity;
+                }
+                GuestCartHelper.Save(HttpContext.Session, guestItems);
+                return Ok(new { message = "Đã thêm vào giỏ hàng", totalQuantity = guestItems.Sum(c => c.Quantity) });
+            }
+            var cart = GetCart(appDbContext, accountId.Value);
             var item = appDbContext.CartItems.Where(c => c.CartId == cart.Id && c.ProductDetailId == dto.ProductDetailId).FirstOrDefault();
             int inCart = item == null ? 0 : item.Quantity;
             if (dto.Quantity + inCart > detail.Quantity)
@@ -113,7 +150,25 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 return BadRequest("Số lượng phải từ 1 đến 1000");
             }
             AppDbContext appDbContext = new AppDbContext();
-            var cart = GetCart(appDbContext);
+            int? accountId = GuestCartHelper.GetLoginId(HttpContext.Session);
+            if (accountId == null)
+            {
+                var guestItems = GuestCartHelper.Get(HttpContext.Session);
+                var guestItem = guestItems.Where(c => c.ProductDetailId == id).FirstOrDefault();
+                if (guestItem == null)
+                {
+                    return NotFound("Không tìm thấy sản phẩm trong giỏ hàng");
+                }
+                int guestStock = appDbContext.ProductDetails.Where(c => c.Id == id).Select(c => c.Quantity).FirstOrDefault();
+                if (dto.Quantity > guestStock)
+                {
+                    return BadRequest("Kho chỉ còn " + guestStock + " sản phẩm");
+                }
+                guestItem.Quantity = dto.Quantity;
+                GuestCartHelper.Save(HttpContext.Session, guestItems);
+                return Ok("Đã cập nhật số lượng");
+            }
+            var cart = GetCart(appDbContext, accountId.Value);
             var item = appDbContext.CartItems.Where(c => c.Id == id && c.CartId == cart.Id).FirstOrDefault();
             if (item == null)
             {
@@ -133,8 +188,19 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         [HttpDelete("remove/{id}")]
         public IActionResult Remove(int id)
         {
+            int? accountId = GuestCartHelper.GetLoginId(HttpContext.Session);
+            if (accountId == null)
+            {
+                var guestItems = GuestCartHelper.Get(HttpContext.Session);
+                if (guestItems.Any(c => c.ProductDetailId == id) == false)
+                {
+                    return NotFound("Không tìm thấy sản phẩm trong giỏ hàng");
+                }
+                GuestCartHelper.Remove(HttpContext.Session, new List<int> { id });
+                return Ok("Đã xóa khỏi giỏ hàng");
+            }
             AppDbContext appDbContext = new AppDbContext();
-            var cart = GetCart(appDbContext);
+            var cart = GetCart(appDbContext, accountId.Value);
             var item = appDbContext.CartItems.Where(c => c.Id == id && c.CartId == cart.Id).FirstOrDefault();
             if (item == null)
             {
@@ -149,15 +215,67 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         [HttpDelete("clear")]
         public IActionResult Clear()
         {
+            int? accountId = GuestCartHelper.GetLoginId(HttpContext.Session);
+            if (accountId == null)
+            {
+                GuestCartHelper.Save(HttpContext.Session, new List<GuestCartItem>());
+                return Ok("Đã xóa hết giỏ hàng");
+            }
             AppDbContext appDbContext = new AppDbContext();
-            var cart = GetCart(appDbContext);
+            var cart = GetCart(appDbContext, accountId.Value);
             appDbContext.CartItems.Where(c => c.CartId == cart.Id).ExecuteDelete();
             return Ok("Đã xóa hết giỏ hàng");
         }
 
-        private Cart GetCart(AppDbContext appDbContext)
+        private List<CartItemDTO> GetGuestItems(AppDbContext appDbContext)
         {
-            int accountId = HttpContext.Session.GetInt32("AccountId") ?? 0;
+            var guestItems = GuestCartHelper.Get(HttpContext.Session);
+            var ids = guestItems.Select(c => c.ProductDetailId).ToList();
+            var details = appDbContext.ProductDetails.Where(c => ids.Contains(c.Id))
+                .Select(c => new
+                {
+                    c.Id,
+                    c.ProductId,
+                    ProductCode = c.Product.Code,
+                    ProductName = c.Product.Name,
+                    c.Product.ImageUrl,
+                    SizeName = c.Size.Name,
+                    ColorName = c.Color.Name,
+                    c.Product.Price,
+                    Stock = c.Quantity,
+                    c.Product.IsDeleted,
+                    c.Product.Status
+                })
+                .ToList();
+            List<CartItemDTO> items = new List<CartItemDTO>();
+            for (int i = guestItems.Count - 1; i >= 0; i--)
+            {
+                var guestItem = guestItems[i];
+                var detail = details.Where(c => c.Id == guestItem.ProductDetailId).FirstOrDefault();
+                if (detail == null)
+                {
+                    continue;
+                }
+                CartItemDTO item = new CartItemDTO();
+                item.Id = detail.Id;
+                item.ProductDetailId = detail.Id;
+                item.ProductId = detail.ProductId;
+                item.ProductCode = detail.ProductCode;
+                item.ProductName = detail.ProductName;
+                item.ImageUrl = detail.ImageUrl;
+                item.SizeName = detail.SizeName;
+                item.ColorName = detail.ColorName;
+                item.Price = detail.Price;
+                item.Quantity = guestItem.Quantity;
+                item.Stock = detail.Stock;
+                item.IsAvailable = detail.IsDeleted == false && detail.Status == 1 && detail.Stock >= guestItem.Quantity;
+                items.Add(item);
+            }
+            return items;
+        }
+
+        private Cart GetCart(AppDbContext appDbContext, int accountId)
+        {
             var cart = appDbContext.Carts.Where(c => c.AccountId == accountId).FirstOrDefault();
             if (cart == null)
             {

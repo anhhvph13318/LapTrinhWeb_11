@@ -17,8 +17,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             _config = config;
         }
 
-
-        [LoginRequired]
         [HttpPost("create")]
         public IActionResult Create([FromBody] CheckoutDTO dto)
         {
@@ -32,36 +30,56 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 return BadRequest("Chưa cấu hình VNPay (cần điền VnPay:TmnCode và VnPay:HashSecret)");
             }
 
-            int accountId = HttpContext.Session.GetInt32("AccountId") ?? 0;
-            OrderHelper.ReleaseExpired(); // trả lại kho các đơn VNPay quá hạn trước khi kiểm tra tồn kho
+            int? accountId = GuestCartHelper.GetLoginId(HttpContext.Session);
+            OrderHelper.ReleaseExpired();
 
             AppDbContext appDbContext = new AppDbContext();
             using var tran = appDbContext.Database.BeginTransaction();
             try
             {
-                var cart = appDbContext.Carts.Where(c => c.AccountId == accountId).FirstOrDefault();
-                if (cart == null)
+                Cart? cart = null;
+                List<CartItem> cartItems = new List<CartItem>();
+                List<GuestCartItem> lines;
+                if (accountId != null)
                 {
-                    return BadRequest("Giỏ hàng trống");
-                }
-                var cartItems = appDbContext.CartItems.Where(c => c.CartId == cart.Id).ToList();
-                if (dto.CartItemIds.Count > 0)
-                {
-                    var ids = dto.CartItemIds.Distinct().ToList();
-                    cartItems = cartItems.Where(c => ids.Contains(c.Id)).ToList();
-                    if (cartItems.Count != ids.Count)
+                    cart = appDbContext.Carts.Where(c => c.AccountId == accountId).FirstOrDefault();
+                    if (cart == null)
                     {
-                        return BadRequest("Có sản phẩm không còn trong giỏ hàng, vui lòng tải lại giỏ hàng");
+                        return BadRequest("Giỏ hàng trống");
+                    }
+                    cartItems = appDbContext.CartItems.Where(c => c.CartId == cart.Id).ToList();
+                    if (dto.CartItemIds.Count > 0)
+                    {
+                        var ids = dto.CartItemIds.Distinct().ToList();
+                        cartItems = cartItems.Where(c => ids.Contains(c.Id)).ToList();
+                        if (cartItems.Count != ids.Count)
+                        {
+                            return BadRequest("Có sản phẩm không còn trong giỏ hàng, vui lòng tải lại giỏ hàng");
+                        }
+                    }
+                    lines = cartItems.Select(c => new GuestCartItem { ProductDetailId = c.ProductDetailId, Quantity = c.Quantity }).ToList();
+                }
+                else
+                {
+                    lines = GuestCartHelper.Get(HttpContext.Session);
+                    if (dto.CartItemIds.Count > 0)
+                    {
+                        var ids = dto.CartItemIds.Distinct().ToList();
+                        lines = lines.Where(c => ids.Contains(c.ProductDetailId)).ToList();
+                        if (lines.Count != ids.Count)
+                        {
+                            return BadRequest("Có sản phẩm không còn trong giỏ hàng, vui lòng tải lại giỏ hàng");
+                        }
                     }
                 }
-                if (cartItems.Count == 0)
+                if (lines.Count == 0)
                 {
                     return BadRequest("Giỏ hàng trống");
                 }
 
                 Order order = new Order();
                 decimal total = 0;
-                foreach (var item in cartItems)
+                foreach (var item in lines)
                 {
                     var detail = appDbContext.ProductDetails
                         .Include(c => c.Product)
@@ -106,13 +124,21 @@ namespace LapTrinhWeb_Nhom_11.Controllers
                 order.AccountId = accountId;
                 appDbContext.Orders.Add(order);
 
-                if (dto.PaymentMethod == 0)
+                if (dto.PaymentMethod == 0 && cart != null)
                 {
                     appDbContext.CartItems.RemoveRange(cartItems);
                 }
-                cart.UpdatedAt = DateTime.Now;
+                if (cart != null)
+                {
+                    cart.UpdatedAt = DateTime.Now;
+                }
                 appDbContext.SaveChanges();
                 tran.Commit();
+
+                if (dto.PaymentMethod == 0 && accountId == null)
+                {
+                    GuestCartHelper.Remove(HttpContext.Session, lines.Select(c => c.ProductDetailId).ToList());
+                }
 
                 if (dto.PaymentMethod == 1)
                 {
@@ -193,7 +219,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
             return Ok("Đã hủy đơn hàng");
         }
-
 
         [AdminOnly]
         [HttpGet("admin")]
@@ -281,7 +306,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             appDbContext.SaveChanges();
             return Ok("Đã cập nhật trạng thái");
         }
-
 
         private List<OrderDTO> ToDTOs(IQueryable<Order> query)
         {

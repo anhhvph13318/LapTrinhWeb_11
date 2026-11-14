@@ -26,6 +26,16 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         public IActionResult VnPayReturn()
         {
             PaymentResult result = Confirm();
+            if (result.Success && result.OrderCode != null)
+            {
+                AppDbContext appDbContext = new AppDbContext();
+                var order = appDbContext.Orders.Where(c => c.OrderCode == result.OrderCode).FirstOrDefault();
+                if (order != null && order.AccountId == null && order.PaymentStatus == 1 && order.Status != 4)
+                {
+                    var detailIds = appDbContext.OrderDetails.Where(c => c.OrderId == order.Id).Select(c => c.ProductDetailId).ToList();
+                    GuestCartHelper.Remove(HttpContext.Session, detailIds);
+                }
+            }
             ViewBag.Success = result.Success;
             ViewBag.OrderCode = result.OrderCode;
             ViewBag.Message = result.UserMessage;

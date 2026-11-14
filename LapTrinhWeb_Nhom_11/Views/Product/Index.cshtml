@@ -8,7 +8,7 @@
     <button type="button" class="btn btn-primary" onclick="openAdd()">Thêm sản phẩm</button>
 </div>
 
-
+<!-- bộ lọc -->
 <div class="card mb-3">
     <div class="card-body">
         <div class="row g-2 mb-2">
@@ -67,7 +67,7 @@
     <tbody id="tbody"></tbody>
 </table>
 
-
+<!-- form thêm / sửa -->
 <div class="modal fade" id="productModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -106,13 +106,48 @@
                     </div>
                 </div>
 
-                
+                <!-- biến thể -->
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between">
                         <b>Biến thể (màu, size, số lượng)</b>
                         <button type="button" class="btn btn-sm btn-success" onclick="addVariant()">+ Thêm biến thể</button>
                     </div>
                     <div class="card-body">
+                        <!-- thêm màu / size mới vào danh sách để chọn -->
+                        <div class="border rounded p-2 mb-3 bg-light">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small mb-1">Chưa có màu cần dùng? Thêm màu mới</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="color" id="newColorHex" class="form-control form-control-color" value="#000000" title="Chọn màu" style="max-width: 50px;" />
+                                        <input type="text" id="newColorName" class="form-control" maxlength="50" placeholder="Tên màu, ví dụ: Xanh rêu" />
+                                        <button type="button" class="btn btn-outline-primary" onclick="addColor()">Thêm màu</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small mb-1">Chưa có size cần dùng? Thêm size mới</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" id="newSizeName" class="form-control" maxlength="20" placeholder="Tên size, ví dụ: XXL, 38" />
+                                        <button type="button" class="btn btn-outline-primary" onclick="addSize()">Thêm size</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="quickAddMessage" class="small mt-1"></div>
+                            <button type="button" class="btn btn-link btn-sm p-0" onclick="toggleManage()">Sửa tên / ẩn màu và size đã có</button>
+                            <div id="managePanel" class="mt-2" style="display: none;">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <b class="small">Danh sách màu</b>
+                                        <div id="colorManageList" class="mt-1"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <b class="small">Danh sách size</b>
+                                        <div id="sizeManageList" class="mt-1"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <table class="table table-sm mb-0">
                             <thead>
                                 <tr>
@@ -127,7 +162,7 @@
                     </div>
                 </div>
 
-                
+                <!-- ảnh -->
                 <div class="card mb-3">
                     <div class="card-header"><b>Ảnh sản phẩm</b> <span class="text-muted">(jpg, png, gif, webp, tối đa 5MB mỗi ảnh)</span></div>
                     <div class="card-body">
@@ -151,9 +186,9 @@
         var products = [];
         var options = { categories: [], colors: [], sizes: [] };
         var editingId = 0;
-        var variantRows = [];   // mỗi biến thể: { id, colorId, sizeId, quantity }
-        var images = [];        // mỗi ảnh: { kind: "old" hoặc "new", id, file, url }
-        var mainIndex = 0;      // vị trí ảnh chính trong mảng images
+        var variantRows = [];   
+        var images = [];        
+        var mainIndex = 0;     
         var modal = new bootstrap.Modal(document.getElementById("productModal"));
 
         function esc(text) {
@@ -183,7 +218,8 @@
             list.forEach(function (x) {
                 var ok = isCategory ? !x.isDeleted : x.isActive;
                 if (ok || x.id == selectedId) {
-                    html += "<option value='" + x.id + "'" + (x.id == selectedId ? " selected" : "") + ">" + esc(x.name) + "</option>";
+                    var note = ok ? "" : (isCategory ? " (đã xóa)" : " (đã ẩn)");
+                    html += "<option value='" + x.id + "'" + (x.id == selectedId ? " selected" : "") + ">" + esc(x.name) + note + "</option>";
                 }
             });
             return html;
@@ -323,6 +359,212 @@
             renderVariants();
         }
 
+        var quickTimer = null;
+
+        function showQuickMessage(text, isOk) {
+            var box = document.getElementById("quickAddMessage");
+            box.className = "small mt-1 " + (isOk ? "text-success" : "text-danger");
+            box.innerText = text;
+            clearTimeout(quickTimer);
+            quickTimer = setTimeout(function () { box.innerText = ""; }, 5000);
+        }
+
+        async function addColor() {
+            var name = document.getElementById("newColorName").value.trim();
+            var hexCode = document.getElementById("newColorHex").value;
+            if (name == "") {
+                showQuickMessage("Tên màu không được để trống", false);
+                return;
+            }
+            var res = await fetch("/colors/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: name, hexCode: hexCode })
+            });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (!res.ok) {
+                showQuickMessage(await res.text(), false);
+                return;
+            }
+            var color = await res.json();
+            var index = options.colors.findIndex(function (x) { return x.id == color.id; });
+            if (index >= 0) {
+                options.colors[index] = color;
+            } else {
+                options.colors.push(color);
+            }
+            syncVariants();
+            var row = variantRows.find(function (v) { return v.colorId == ""; });
+            if (row) {
+                row.colorId = color.id;
+            }
+            renderVariants();
+            document.getElementById("newColorName").value = "";
+            renderManage();
+            showQuickMessage(color.message + (row ? " và đã chọn sẵn ở biến thể chưa có màu" : ""), true);
+        }
+
+        async function addSize() {
+            var name = document.getElementById("newSizeName").value.trim();
+            if (name == "") {
+                showQuickMessage("Tên size không được để trống", false);
+                return;
+            }
+            var res = await fetch("/sizes/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: name })
+            });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (!res.ok) {
+                showQuickMessage(await res.text(), false);
+                return;
+            }
+            var size = await res.json();
+            var index = options.sizes.findIndex(function (x) { return x.id == size.id; });
+            if (index >= 0) {
+                options.sizes[index] = size;
+            } else {
+                options.sizes.push(size);
+            }
+            syncVariants();
+            var row = variantRows.find(function (v) { return v.sizeId == ""; });
+            if (row) {
+                row.sizeId = size.id;
+            }
+            renderVariants();
+            document.getElementById("newSizeName").value = "";
+            renderManage();
+            showQuickMessage(size.message + (row ? " và đã chọn sẵn ở biến thể chưa có size" : ""), true);
+        }
+
+        document.getElementById("newColorName").addEventListener("keydown", function (e) {
+            if (e.key == "Enter") {
+                addColor();
+            }
+        });
+        document.getElementById("newSizeName").addEventListener("keydown", function (e) {
+            if (e.key == "Enter") {
+                addSize();
+            }
+        });
+
+        var kinds = {
+            colors: { url: "/colors", label: "màu", prefix: "mc" },
+            sizes: { url: "/sizes", label: "size", prefix: "ms" }
+        };
+
+        function toggleManage() {
+            var panel = document.getElementById("managePanel");
+            var show = panel.style.display == "none";
+            panel.style.display = show ? "block" : "none";
+            if (show) {
+                renderManage();
+            }
+        }
+
+        function manageRow(kind, item) {
+            var k = kinds[kind];
+            var html = "<div class='input-group input-group-sm'>";
+            if (kind == "colors") {
+                var hex = /^#[0-9a-fA-F]{6}$/.test(item.hexCode ?? "") ? item.hexCode : "#cccccc";
+                html += "<input type='color' id='" + k.prefix + "-hex-" + item.id + "' class='form-control form-control-color' style='max-width: 45px;' value='" + hex + "' />";
+            }
+            var maxLength = kind == "colors" ? 50 : 20;
+            html += "<input type='text' id='" + k.prefix + "-name-" + item.id + "' class='form-control" + (item.isActive ? "" : " text-muted") + "' maxlength='" + maxLength + "' value='" + esc(item.name) + "' />";
+            html += "<button type='button' class='btn btn-outline-primary' onclick=\"saveItem('" + kind + "'," + item.id + ")\">Lưu</button>";
+            html += "<button type='button' class='btn " + (item.isActive ? "btn-outline-danger" : "btn-outline-success") + "' onclick=\"toggleItem('" + kind + "'," + item.id + ")\">" + (item.isActive ? "Ẩn" : "Hiện") + "</button>";
+            html += "</div>";
+            html += "<div class='form-text mt-0 mb-2'>Đang dùng ở " + (item.usedCount ?? 0) + " biến thể" + (item.isActive ? "" : " · đang ẩn") + "</div>";
+            return html;
+        }
+
+        function renderManage() {
+            var colorHtml = options.colors.map(function (c) { return manageRow("colors", c); }).join("");
+            var sizeHtml = options.sizes.map(function (s) { return manageRow("sizes", s); }).join("");
+            document.getElementById("colorManageList").innerHTML = colorHtml == "" ? "<span class='text-muted small'>Chưa có màu nào</span>" : colorHtml;
+            document.getElementById("sizeManageList").innerHTML = sizeHtml == "" ? "<span class='text-muted small'>Chưa có size nào</span>" : sizeHtml;
+        }
+
+        function applyItem(kind, item) {
+            var index = options[kind].findIndex(function (x) { return x.id == item.id; });
+            if (index >= 0) {
+                options[kind][index] = item;
+            } else {
+                options[kind].push(item);
+            }
+            syncVariants();  
+            renderVariants();
+            renderManage();
+            render();         
+            showQuickMessage(item.message, true);
+        }
+
+        
+        async function saveItem(kind, id) {
+            var k = kinds[kind];
+            var item = options[kind].find(function (x) { return x.id == id; });
+            var name = document.getElementById(k.prefix + "-name-" + id).value.trim();
+            if (name == "") {
+                showQuickMessage("Tên " + k.label + " không được để trống", false);
+                return;
+            }
+            var body = { name: name };
+            if (kind == "colors") {
+                var hexCode = document.getElementById(k.prefix + "-hex-" + id).value;
+                
+                if (!item.hexCode && hexCode == "#cccccc") {
+                    hexCode = null;
+                }
+                body.hexCode = hexCode;
+            }
+            if (name != item.name && item.usedCount > 0) {
+                var question = "Có " + item.usedCount + " biến thể sản phẩm đang dùng " + k.label + " này. Đổi tên sẽ áp dụng cho tất cả, kể cả hiển thị trong hóa đơn cũ. Tiếp tục?";
+                if (!confirm(question)) {
+                    return;
+                }
+            }
+            var res = await fetch(k.url + "/update/" + id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (!res.ok) {
+                showQuickMessage(await res.text(), false);
+                return;
+            }
+            applyItem(kind, await res.json());
+        }
+
+        async function toggleItem(kind, id) {
+            var k = kinds[kind];
+            var item = options[kind].find(function (x) { return x.id == id; });
+            var action = item.isActive ? "hide" : "show";
+            if (item.isActive) {
+                var question = "Ẩn " + k.label + " \"" + item.name + "\"?\n";
+                question += "Sau khi ẩn sẽ không chọn được cho biến thể mới. Các sản phẩm đang dùng " + k.label + " này (" + (item.usedCount ?? 0) + " biến thể) vẫn giữ nguyên.";
+                if (!confirm(question)) {
+                    return;
+                }
+            }
+            var res = await fetch(k.url + "/" + action + "/" + id, { method: "PUT" });
+            if (!checkLogin(res)) {
+                return;
+            }
+            if (!res.ok) {
+                showQuickMessage(await res.text(), false);
+                return;
+            }
+            applyItem(kind, await res.json());
+        }
+
         function renderImages() {
             var html = "";
             images.forEach(function (img, i) {
@@ -373,7 +615,7 @@
                 images.push({ kind: "new", id: 0, file: file, url: URL.createObjectURL(file) });
             });
             document.getElementById("error").innerText = message;
-            this.value = ""; // cho phép chọn lại cùng 1 file
+            this.value = "";
             renderImages();
         });
 
@@ -461,7 +703,7 @@
             var fd = new FormData();
             fd.append("code", code);
             fd.append("name", name);
-            fd.append("price", Math.round(Number(price))); // giá lưu là số nguyên
+            fd.append("price", Math.round(Number(price))); 
             fd.append("description", document.getElementById("description").value);
             fd.append("categoryId", categoryId);
             fd.append("status", document.getElementById("status").value);

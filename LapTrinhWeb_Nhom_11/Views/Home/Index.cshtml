@@ -415,7 +415,7 @@
     
     <header class="header">
         <div class="container header-content">
-            <a href="/" class="logo">
+            <a href="/home" class="logo">
                 <i class="fa-solid fa-shoe-prints"></i>
                 BUBU Shoes
             </a>
@@ -428,6 +428,14 @@
                 <a href="#products">Sản phẩm</a>
                 <a href="#services">Dịch vụ</a>
                 <a href="#footer">Liên hệ</a>
+                @if (Context.Session.GetString("AccountId") != null)
+                {
+                    <a href="/Logout">Đăng xuất</a>
+                }
+                else
+                {
+                    <a href="/Login">Đăng nhập</a>
+                }
             </nav>
         </div>
     </header>

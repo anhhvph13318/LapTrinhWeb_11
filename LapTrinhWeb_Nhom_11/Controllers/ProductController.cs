@@ -15,7 +15,7 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             return View();
         }
 
-        [HttpGet("GetAll")]
+        [HttpGet("GetALL")]
         public List<ProductDTO> GetAll()
         {
             AppDbContext appDbContext = new AppDbContext();
@@ -64,8 +64,8 @@ namespace LapTrinhWeb_Nhom_11.Controllers
         {
             AppDbContext appDbContext = new AppDbContext();
             var categories = appDbContext.Categories.Select(c => new { c.Id, c.Name, c.IsDeleted }).ToList();
-            var colors = appDbContext.Colors.Select(c => new { c.Id, c.Name, c.HexCode, c.IsActive }).ToList();
-            var sizes = appDbContext.Sizes.Select(c => new { c.Id, c.Name, c.IsActive }).ToList();
+            var colors = appDbContext.Colors.Select(c => new { c.Id, c.Name, c.HexCode, c.IsActive, UsedCount = c.ProductDetails.Count() }).ToList();
+            var sizes = appDbContext.Sizes.Select(c => new { c.Id, c.Name, c.IsActive, UsedCount = c.ProductDetails.Count() }).ToList();
             return Ok(new { categories = categories, colors = colors, sizes = sizes });
         }
 
@@ -180,8 +180,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             appDbContext.SaveChanges();
             return Ok("Khôi phục thành công");
         }
-
-
         private List<ProductDTO> ToDTOs(AppDbContext appDbContext, List<Product> products)
         {
             List<ProductDTO> productDTOs = new List<ProductDTO>();
@@ -235,7 +233,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
             return productDTOs;
         }
-
         private string? CheckForm(AppDbContext appDbContext, ProductFormDTO form, int id)
         {
             if (string.IsNullOrWhiteSpace(form.Code))
@@ -269,7 +266,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             {
                 return "Mã sản phẩm đã tồn tại";
             }
-
             if (form.Variants.Count == 0)
             {
                 return "Sản phẩm phải có ít nhất 1 biến thể (màu, size, số lượng)";
@@ -366,7 +362,6 @@ namespace LapTrinhWeb_Nhom_11.Controllers
             }
             return "";
         }
-
         private void SaveImages(Product product, ProductFormDTO form)
         {
             AppDbContext db = new AppDbContext();

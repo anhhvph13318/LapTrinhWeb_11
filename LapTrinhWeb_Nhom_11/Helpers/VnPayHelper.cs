@@ -8,8 +8,8 @@ namespace LapTrinhWeb_Nhom_11.Helpers
 {
     public class VnPayHelper
     {
-        private const string TMN_CODE = "KKGKUI93";
-        private const string HASH_SECRET = "K3V28UR3A2RPUDVE20QGHCZJAZOTUL7Q";
+        private const string TMN_CODE = "81R293I5";
+        private const string HASH_SECRET = "PSQATLHCNFDNWUCHGNYAYAXNOUDAEGFQ";
 
         public static bool IsConfigured(IConfiguration config)
         {
